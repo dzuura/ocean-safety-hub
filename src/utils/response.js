@@ -5,7 +5,7 @@ class ApiResponse {
   /**
    * Success response
    */
-  static success(res, data, message = 'Success', statusCode = 200) {
+  static success(res, data, message = "Success", statusCode = 200) {
     return res.status(statusCode).json({
       success: true,
       message,
@@ -17,7 +17,12 @@ class ApiResponse {
   /**
    * Error response
    */
-  static error(res, message = 'Internal Server Error', statusCode = 500, errors = null) {
+  static error(
+    res,
+    message = "Internal Server Error",
+    statusCode = 500,
+    errors = null
+  ) {
     return res.status(statusCode).json({
       success: false,
       message,
@@ -29,7 +34,7 @@ class ApiResponse {
   /**
    * Validation error response
    */
-  static validationError(res, errors, message = 'Validation Error') {
+  static validationError(res, errors, message = "Validation Error") {
     return res.status(400).json({
       success: false,
       message,
@@ -41,7 +46,7 @@ class ApiResponse {
   /**
    * Not found response
    */
-  static notFound(res, message = 'Resource not found') {
+  static notFound(res, message = "Resource not found") {
     return res.status(404).json({
       success: false,
       message,
@@ -52,7 +57,7 @@ class ApiResponse {
   /**
    * Unauthorized response
    */
-  static unauthorized(res, message = 'Unauthorized access') {
+  static unauthorized(res, message = "Unauthorized access") {
     return res.status(401).json({
       success: false,
       message,
@@ -63,8 +68,19 @@ class ApiResponse {
   /**
    * Forbidden response
    */
-  static forbidden(res, message = 'Access forbidden') {
+  static forbidden(res, message = "Access forbidden") {
     return res.status(403).json({
+      success: false,
+      message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  /**
+   * Bad request response
+   */
+  static badRequest(res, message = "Bad request") {
+    return res.status(400).json({
       success: false,
       message,
       timestamp: new Date().toISOString(),

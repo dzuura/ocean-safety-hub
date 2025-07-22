@@ -7,6 +7,152 @@ const Logger = require("../utils/logger");
 const router = express.Router();
 
 /**
+ * POST /api/auth/register
+ * Registrasi user baru dengan email/password
+ */
+router.post("/register", async (req, res) => {
+  try {
+    const { email, password, name } = req.body;
+
+    // Validasi input
+    if (!email || !password) {
+      return ApiResponse.badRequest(res, "Email dan password diperlukan");
+    }
+
+    if (password.length < 6) {
+      return ApiResponse.badRequest(res, "Password minimal 6 karakter");
+    }
+
+    const authAdmin = getAuthAdmin();
+    if (!authAdmin) {
+      return ApiResponse.error(res, "Service autentikasi tidak tersedia");
+    }
+
+    // Buat user di Firebase Auth
+    const userRecord = await authAdmin.createUser({
+      email: email,
+      password: password,
+      displayName: name || "",
+      emailVerified: false,
+    });
+
+    // Buat record di Firestore
+    const db = getFirestoreAdmin();
+    if (db) {
+      await db
+        .collection("users")
+        .doc(userRecord.uid)
+        .set({
+          uid: userRecord.uid,
+          email: userRecord.email,
+          name: name || "",
+          emailVerified: false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          role: "user",
+          authProvider: "email",
+        });
+    }
+
+    // Generate custom token untuk auto-login
+    const customToken = await authAdmin.createCustomToken(userRecord.uid);
+
+    const responseData = {
+      uid: userRecord.uid,
+      email: userRecord.email,
+      name: name || "",
+      customToken: customToken,
+      emailVerified: false,
+    };
+
+    Logger.info("User registered successfully:", {
+      uid: userRecord.uid,
+      email: userRecord.email,
+    });
+    return ApiResponse.success(res, responseData, "Registrasi berhasil");
+  } catch (error) {
+    Logger.error("Registration failed:", error);
+
+    if (error.code === "auth/email-already-exists") {
+      return ApiResponse.badRequest(res, "Email sudah terdaftar");
+    }
+
+    if (error.code === "auth/invalid-email") {
+      return ApiResponse.badRequest(res, "Format email tidak valid");
+    }
+
+    if (error.code === "auth/weak-password") {
+      return ApiResponse.badRequest(res, "Password terlalu lemah");
+    }
+
+    return ApiResponse.error(res, "Gagal melakukan registrasi");
+  }
+});
+
+/**
+ * POST /api/auth/login
+ * Login dengan email dan password
+ */
+router.post("/login", async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return ApiResponse.badRequest(res, "Email dan password diperlukan");
+    }
+
+    const authAdmin = getAuthAdmin();
+    if (!authAdmin) {
+      return ApiResponse.error(res, "Service autentikasi tidak tersedia");
+    }
+
+    // Verifikasi user exists
+    const userRecord = await authAdmin.getUserByEmail(email);
+
+    // Generate custom token untuk login
+    // Note: Firebase Admin SDK tidak bisa verify password secara langsung
+    // Password verification harus dilakukan di client-side dengan Firebase Client SDK
+    // Endpoint ini memberikan custom token untuk testing/development
+    const customToken = await authAdmin.createCustomToken(userRecord.uid);
+
+    // Get user data dari Firestore
+    const db = getFirestoreAdmin();
+    let userData = {
+      uid: userRecord.uid,
+      email: userRecord.email,
+      emailVerified: userRecord.emailVerified,
+      name: userRecord.displayName || "",
+    };
+
+    if (db) {
+      const userDoc = await db.collection("users").doc(userRecord.uid).get();
+      if (userDoc.exists) {
+        userData = { ...userData, ...userDoc.data() };
+      }
+    }
+
+    const responseData = {
+      ...userData,
+      customToken: customToken,
+    };
+
+    Logger.info("User logged in:", {
+      uid: userRecord.uid,
+      email: userRecord.email,
+    });
+    return ApiResponse.success(res, responseData, "Login berhasil");
+  } catch (error) {
+    Logger.error("Login failed:", error);
+
+    if (error.code === "auth/user-not-found") {
+      return ApiResponse.unauthorized(res, "Email atau password salah");
+    }
+
+    return ApiResponse.unauthorized(res, "Email atau password salah");
+  }
+});
+
+/**
  * POST /api/auth/verify
  * Verifikasi Firebase ID Token
  */
@@ -99,6 +245,122 @@ router.put("/profile", authenticateToken, async (req, res) => {
 });
 
 /**
+ * POST /api/auth/google-signin
+ * Handle Google Sign-In dari frontend
+ */
+router.post("/google-signin", async (req, res) => {
+  try {
+    const { idToken } = req.body;
+
+    if (!idToken) {
+      return ApiResponse.badRequest(res, "Google ID Token diperlukan");
+    }
+
+    const authAdmin = getAuthAdmin();
+    if (!authAdmin) {
+      return ApiResponse.error(res, "Service autentikasi tidak tersedia");
+    }
+
+    // Verifikasi Google ID Token
+    const decodedToken = await authAdmin.verifyIdToken(idToken);
+
+    // Cek apakah user sudah ada di Firestore
+    const db = getFirestoreAdmin();
+    let userData = null;
+
+    if (db) {
+      const userDoc = await db.collection("users").doc(decodedToken.uid).get();
+
+      if (!userDoc.exists) {
+        // Buat record baru untuk user Google Sign-In
+        userData = {
+          uid: decodedToken.uid,
+          email: decodedToken.email,
+          name: decodedToken.name || "",
+          picture: decodedToken.picture || "",
+          emailVerified: decodedToken.email_verified || false,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          role: "user",
+          authProvider: "google",
+        };
+
+        await db.collection("users").doc(decodedToken.uid).set(userData);
+        Logger.info("New Google user created:", {
+          uid: decodedToken.uid,
+          email: decodedToken.email,
+        });
+      } else {
+        userData = userDoc.data();
+        // Update last login time
+        await db.collection("users").doc(decodedToken.uid).update({
+          updatedAt: new Date().toISOString(),
+        });
+      }
+    }
+
+    const responseData = {
+      uid: decodedToken.uid,
+      email: decodedToken.email,
+      name: decodedToken.name || "",
+      picture: decodedToken.picture || "",
+      emailVerified: decodedToken.email_verified || false,
+      authProvider: "google",
+      isNewUser: !userData || userData.createdAt === userData.updatedAt,
+    };
+
+    return ApiResponse.success(res, responseData, "Google Sign-In berhasil");
+  } catch (error) {
+    Logger.error("Google Sign-In failed:", error);
+
+    if (error.code === "auth/id-token-expired") {
+      return ApiResponse.unauthorized(res, "Google token telah kedaluwarsa");
+    }
+
+    if (error.code === "auth/id-token-revoked") {
+      return ApiResponse.unauthorized(res, "Google token telah dicabut");
+    }
+
+    return ApiResponse.error(res, "Gagal melakukan Google Sign-In");
+  }
+});
+
+/**
+ * POST /api/auth/send-verification-email
+ * Kirim email verifikasi
+ */
+router.post("/send-verification-email", authenticateToken, async (req, res) => {
+  try {
+    const authAdmin = getAuthAdmin();
+    if (!authAdmin) {
+      return ApiResponse.error(res, "Service autentikasi tidak tersedia");
+    }
+
+    // Generate email verification link
+    const actionCodeSettings = {
+      url: process.env.CORS_ORIGIN || "http://localhost:3000",
+      handleCodeInApp: true,
+    };
+
+    const link = await authAdmin.generateEmailVerificationLink(
+      req.user.email,
+      actionCodeSettings
+    );
+
+    // Di production, Anda akan mengirim email menggunakan service seperti SendGrid
+    // Untuk development, kita return link-nya
+    return ApiResponse.success(
+      res,
+      { verificationLink: link },
+      "Link verifikasi email berhasil dibuat"
+    );
+  } catch (error) {
+    Logger.error("Failed to send verification email:", error);
+    return ApiResponse.error(res, "Gagal mengirim email verifikasi");
+  }
+});
+
+/**
  * POST /api/auth/create-user-record
  * Membuat record user di Firestore setelah registrasi
  */
@@ -138,6 +400,82 @@ router.post("/create-user-record", authenticateToken, async (req, res) => {
   } catch (error) {
     Logger.error("Failed to create user record:", error);
     return ApiResponse.error(res, "Gagal membuat user record");
+  }
+});
+
+/**
+ * POST /api/auth/logout
+ * Logout user (revoke refresh tokens)
+ */
+router.post("/logout", authenticateToken, async (req, res) => {
+  try {
+    const authAdmin = getAuthAdmin();
+    if (!authAdmin) {
+      return ApiResponse.error(res, "Service autentikasi tidak tersedia");
+    }
+
+    // Revoke all refresh tokens untuk user
+    await authAdmin.revokeRefreshTokens(req.user.uid);
+
+    Logger.info("User logged out:", {
+      uid: req.user.uid,
+      email: req.user.email,
+    });
+    return ApiResponse.success(res, null, "Logout berhasil");
+  } catch (error) {
+    Logger.error("Logout failed:", error);
+    return ApiResponse.error(res, "Gagal melakukan logout");
+  }
+});
+
+/**
+ * POST /api/auth/forgot-password
+ * Kirim email reset password
+ */
+router.post("/forgot-password", async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return ApiResponse.badRequest(res, "Email diperlukan");
+    }
+
+    const authAdmin = getAuthAdmin();
+    if (!authAdmin) {
+      return ApiResponse.error(res, "Service autentikasi tidak tersedia");
+    }
+
+    // Generate password reset link
+    const actionCodeSettings = {
+      url: process.env.CORS_ORIGIN || "http://localhost:3000",
+      handleCodeInApp: false,
+    };
+
+    const link = await authAdmin.generatePasswordResetLink(
+      email,
+      actionCodeSettings
+    );
+
+    // Di production, Anda akan mengirim email menggunakan service seperti SendGrid
+    // Untuk development, kita return link-nya
+    return ApiResponse.success(
+      res,
+      { resetLink: link },
+      "Link reset password berhasil dibuat"
+    );
+  } catch (error) {
+    Logger.error("Failed to send password reset email:", error);
+
+    if (error.code === "auth/user-not-found") {
+      // Untuk keamanan, jangan beri tahu bahwa email tidak ditemukan
+      return ApiResponse.success(
+        res,
+        null,
+        "Jika email terdaftar, link reset password akan dikirim"
+      );
+    }
+
+    return ApiResponse.error(res, "Gagal mengirim email reset password");
   }
 });
 

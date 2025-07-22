@@ -1,14 +1,8 @@
-const admin = require('firebase-admin');
-const { initializeApp } = require('firebase/app');
-const { getAuth } = require('firebase/auth');
-const { getFirestore } = require('firebase/firestore');
-const config = require('./index');
-const Logger = require('../utils/logger');
+const admin = require("firebase-admin");
+const config = require("./index");
+const Logger = require("../utils/logger");
 
 let adminApp = null;
-let clientApp = null;
-let db = null;
-let auth = null;
 
 /**
  * Initialize Firebase Admin SDK
@@ -17,7 +11,7 @@ function initializeFirebaseAdmin() {
   try {
     if (!adminApp && config.firebase.admin.projectId) {
       const serviceAccount = {
-        type: 'service_account',
+        type: "service_account",
         project_id: config.firebase.admin.projectId,
         private_key_id: config.firebase.admin.privateKeyId,
         private_key: config.firebase.admin.privateKey,
@@ -25,46 +19,19 @@ function initializeFirebaseAdmin() {
         client_id: config.firebase.admin.clientId,
         auth_uri: config.firebase.admin.authUri,
         token_uri: config.firebase.admin.tokenUri,
-        auth_provider_x509_cert_url: 'https://www.googleapis.com/oauth2/v1/certs',
+        auth_provider_x509_cert_url:
+          "https://www.googleapis.com/oauth2/v1/certs",
         client_x509_cert_url: config.firebase.admin.clientX509CertUrl,
       };
 
       adminApp = admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
-        databaseURL: config.firebase.web.databaseURL,
       });
 
-      Logger.info('Firebase Admin SDK initialized successfully');
+      Logger.info("Firebase Admin SDK initialized successfully");
     }
   } catch (error) {
-    Logger.error('Failed to initialize Firebase Admin SDK:', error);
-  }
-}
-
-/**
- * Initialize Firebase Client SDK
- */
-function initializeFirebaseClient() {
-  try {
-    if (!clientApp && config.firebase.web.apiKey) {
-      const firebaseConfig = {
-        apiKey: config.firebase.web.apiKey,
-        authDomain: config.firebase.web.authDomain,
-        databaseURL: config.firebase.web.databaseURL,
-        projectId: config.firebase.web.projectId,
-        storageBucket: config.firebase.web.storageBucket,
-        messagingSenderId: config.firebase.web.messagingSenderId,
-        appId: config.firebase.web.appId,
-      };
-
-      clientApp = initializeApp(firebaseConfig);
-      auth = getAuth(clientApp);
-      db = getFirestore(clientApp);
-
-      Logger.info('Firebase Client SDK initialized successfully');
-    }
-  } catch (error) {
-    Logger.error('Failed to initialize Firebase Client SDK:', error);
+    Logger.error("Failed to initialize Firebase Admin SDK:", error);
   }
 }
 
@@ -95,23 +62,19 @@ function getAuthAdmin() {
 }
 
 /**
- * Get Firebase Client Auth instance
+ * Get Firebase Client Auth instance (TIDAK DIPERLUKAN untuk backend)
  */
 function getClientAuth() {
-  if (!auth) {
-    initializeFirebaseClient();
-  }
-  return auth;
+  Logger.warn("getClientAuth() called - consider using Admin SDK instead");
+  return null;
 }
 
 /**
- * Get Firestore Client instance
+ * Get Firestore Client instance (TIDAK DIPERLUKAN untuk backend)
  */
 function getFirestoreClient() {
-  if (!db) {
-    initializeFirebaseClient();
-  }
-  return db;
+  Logger.warn("getFirestoreClient() called - consider using Admin SDK instead");
+  return null;
 }
 
 /**
@@ -121,23 +84,23 @@ async function verifyIdToken(idToken) {
   try {
     const authAdmin = getAuthAdmin();
     if (!authAdmin) {
-      throw new Error('Firebase Admin not initialized');
+      throw new Error("Firebase Admin not initialized");
     }
-    
+
     const decodedToken = await authAdmin.verifyIdToken(idToken);
     return decodedToken;
   } catch (error) {
-    Logger.error('Failed to verify ID token:', error);
+    Logger.error("Failed to verify ID token:", error);
     throw error;
   }
 }
 
 /**
- * Initialize Firebase services
+ * Initialize Firebase services (Backend hanya butuh Admin SDK)
  */
 function initializeFirebase() {
   initializeFirebaseAdmin();
-  initializeFirebaseClient();
+  // initializeFirebaseClient(); // Tidak diperlukan untuk backend
 }
 
 module.exports = {

@@ -91,6 +91,7 @@ Key variables:
 - `FIREBASE_PROJECT_ID`: Firebase Project ID
 - `FIREBASE_PRIVATE_KEY`: Firebase Admin SDK Private Key
 - `FIREBASE_CLIENT_EMAIL`: Firebase Service Account Email
+- `FIREBASE_CLIENT_ID`: Firebase Client ID
 - `PORT`: Port server (default: 3001)
 
 ## 📊 API Endpoints
@@ -99,9 +100,23 @@ Key variables:
 
 - `GET /health` - Status kesehatan API
 
-### Weather & Safety (Coming Soon)
+### Weather & Marine Data
 
-- `GET /api/weather` - Data cuaca laut
+- `GET /api/weather/marine` - Data cuaca maritim (gelombang, arah, periode)
+- `GET /api/weather/current` - Data cuaca umum (suhu, angin, tekanan)
+- `GET /api/weather/complete` - Data cuaca lengkap (maritim + umum)
+- `GET /api/weather/locations/popular` - Lokasi populer nelayan Indonesia
+- `GET /api/weather/cache/stats` - Statistik cache
+- `DELETE /api/weather/cache` - Clear cache
+
+### Authentication
+
+- `POST /api/auth/verify` - Verifikasi Firebase token
+- `GET /api/auth/profile` - Profil user
+- `PUT /api/auth/profile` - Update profil user
+
+### Safety & Predictions (Coming Soon)
+
 - `GET /api/safety` - Analisis zona keamanan
 - `GET /api/predictions` - Prediksi waktu aman berlayar
 
@@ -111,6 +126,8 @@ Key variables:
 - `POST /api/community/reports` - Buat laporan baru
 
 ## 🧪 Testing
+
+### Unit & Integration Tests
 
 ```bash
 # Run all tests

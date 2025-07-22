@@ -7,7 +7,9 @@ const config = {
 
   // API Configuration
   openMeteo: {
-    baseUrl: process.env.OPEN_METEO_API_URL || "https://api.open-meteo.com/v1",
+    baseUrl: process.env.OPEN_METEO_API_URL,
+    marineUrl:
+      process.env.OPEN_METEO_MARINE_URL,
   },
 
   gemini: {
@@ -26,14 +28,6 @@ const config = {
       authUri: process.env.FIREBASE_AUTH_URI,
       tokenUri: process.env.FIREBASE_TOKEN_URI,
       clientX509CertUrl: process.env.FIREBASE_CLIENT_X509_CERT_URL,
-    },
-    // Web App Configuration (untuk frontend)
-    web: {
-      apiKey: process.env.FIREBASE_API_KEY,
-      authDomain: process.env.FIREBASE_AUTH_DOMAIN,
-      databaseURL: process.env.FIREBASE_DATABASE_URL,
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
     },
   },
 

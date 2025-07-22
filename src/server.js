@@ -49,17 +49,33 @@ app.get("/health", (req, res) => {
   });
 });
 
-// API routes (akan ditambahkan di task selanjutnya)
-app.use("/api", (req, res) => {
+// Import routes
+const weatherRoutes = require("./routes/weather");
+const authRoutes = require("./routes/auth");
+
+// API routes
+app.use("/api/weather", weatherRoutes);
+app.use("/api/auth", authRoutes);
+
+// API info endpoint
+app.get("/api", (req, res) => {
   res.status(200).json({
     message: "Pelaut Hebat API",
     version: "1.0.0",
     endpoints: {
       health: "/health",
-      weather: "/api/weather (coming soon)",
+      weather: {
+        marine: "/api/weather/marine",
+        current: "/api/weather/current",
+        complete: "/api/weather/complete",
+        locations: "/api/weather/locations/popular",
+      },
+      auth: {
+        verify: "/api/auth/verify",
+        profile: "/api/auth/profile",
+      },
       safety: "/api/safety (coming soon)",
       community: "/api/community (coming soon)",
-      auth: "/api/auth (coming soon)",
     },
   });
 });

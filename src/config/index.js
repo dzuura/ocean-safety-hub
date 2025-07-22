@@ -8,12 +8,14 @@ const config = {
   // API Configuration
   openMeteo: {
     baseUrl: process.env.OPEN_METEO_API_URL,
-    marineUrl:
-      process.env.OPEN_METEO_MARINE_URL,
+    marineUrl: process.env.OPEN_METEO_MARINE_URL,
   },
 
   gemini: {
     apiKey: process.env.GEMINI_API_KEY,
+    model: process.env.GEMINI_MODEL || "gemini-1.5-flash",
+    maxTokens: parseInt(process.env.GEMINI_MAX_TOKENS) || 2048,
+    temperature: parseFloat(process.env.GEMINI_TEMPERATURE) || 0.7,
   },
 
   // Firebase Configuration

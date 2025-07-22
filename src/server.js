@@ -52,10 +52,12 @@ app.get("/health", (req, res) => {
 // Import routes
 const weatherRoutes = require("./routes/weather");
 const authRoutes = require("./routes/auth");
+const aiRoutes = require("./routes/ai");
 
 // API routes
 app.use("/api/weather", weatherRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/api/ai", aiRoutes);
 
 // API info endpoint
 app.get("/api", (req, res) => {
@@ -80,6 +82,13 @@ app.get("/api", (req, res) => {
         "forgot-password": "/api/auth/forgot-password (email)",
         "send-verification-email": "/api/auth/send-verification-email",
         account: "/api/auth/account (DELETE)",
+      },
+      ai: {
+        status: "/api/ai/status",
+        "explain-conditions": "/api/ai/explain-conditions (POST)",
+        "recommend-times": "/api/ai/recommend-times (POST)",
+        "detect-anomalies": "/api/ai/detect-anomalies (POST)",
+        "early-warnings": "/api/ai/early-warnings (GET)",
       },
       safety: "/api/safety (coming soon)",
       community: "/api/community (coming soon)",

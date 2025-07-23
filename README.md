@@ -1,26 +1,29 @@
-# Pelaut Hebat - Backend API
+# 🌊 Pelaut Hebat - Ocean Safety Hub API
 
-Platform backend untuk Pelaut Hebat, sistem keselamatan transportasi laut dan kesejahteraan masyarakat pesisir.
+**Platform keselamatan maritim Indonesia** yang menyediakan data cuaca laut real-time, analisis AI, dan sistem peringatan dini untuk nelayan dan masyarakat pesisir.
 
-## 🌊 Fitur Utama
+## ✨ Fitur Utama
 
-- **Peta Interaktif**: API untuk data zona aman/berbahaya berdasarkan kondisi laut
-- **Prediksi Waktu Aman Berlayar**: Rekomendasi waktu terbaik untuk berlayar
-- **Notifikasi & Peringatan**: Sistem peringatan real-time untuk cuaca buruk
-- **Cek Lokasi Spesifik**: Data kondisi laut berdasarkan koordinat
-- **Integrasi AI**: Insight dari Gemini AI untuk analisis kondisi laut
-- **Fitur Komunitas**: Sistem laporan dan diskusi antar pengguna
+- **🌊 Data Cuaca Maritim**: Gelombang, angin, dan kondisi laut dari Open Meteo API
+- **🤖 AI-Powered Analysis**: Penjelasan kondisi laut dalam bahasa natural menggunakan Google Gemini AI
+- **⏰ Rekomendasi Waktu Berlayar**: Saran waktu terbaik berdasarkan jenis perahu dan kondisi cuaca
+- **🚨 Deteksi Anomali & Peringatan Dini**: Sistem deteksi pola cuaca tidak normal dengan berbagai tingkat sensitivitas
+- **🗺️ Auto-Detection Timezone**: Deteksi otomatis zona waktu Indonesia (WIB/WITA/WIT) berdasarkan koordinat
+- **🔐 Authentication & Authorization**: Sistem autentikasi Firebase dengan Google OAuth
+- **📊 Caching & Performance**: Sistem cache untuk optimasi performa API
 
 ## 🛠️ Tech Stack
 
-- **Backend**: Express.js
-- **Database**: Firebase Firestore
+- **Backend Framework**: Express.js dengan middleware keamanan lengkap
+- **Database**: Firebase Firestore untuk data pengguna dan konfigurasi
 - **Authentication**: Firebase Auth (Email/Password + Google OAuth)
 - **External APIs**:
-  - Open Meteo (data cuaca laut)
-  - Google Gemini AI (analisis dan insight)
-- **Security**: Helmet, CORS, Rate Limiting
-- **Testing**: Jest, Supertest
+  - **Open Meteo API**: Data cuaca maritim dan forecast
+  - **Google Gemini AI**: Analisis kondisi laut dan rekomendasi cerdas
+- **Security**: Helmet, CORS, Rate Limiting, Input validation
+- **Performance**: Response caching, request optimization
+- **Testing**: Jest, Supertest dengan coverage lengkap
+- **Monitoring**: Structured logging dengan Winston
 
 ## 🚀 Quick Start
 
@@ -35,7 +38,7 @@ Platform backend untuk Pelaut Hebat, sistem keselamatan transportasi laut dan ke
 1. Clone repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/dzuura/ocean-safety-hub.git
 cd ocean-safety-hub
 ```
 
@@ -96,34 +99,119 @@ Key variables:
 
 ## 📊 API Endpoints
 
-### Health Check
+### 🏥 Health Check
 
-- `GET /health` - Status kesehatan API
+- `GET /api/health` - Status kesehatan API dan environment info
+- `GET /api` - Informasi API dan daftar semua endpoint tersedia
 
-### Weather & Marine Data
+### 🌊 Weather & Marine Data
 
-- `GET /api/weather/marine` - Data cuaca maritim (gelombang, arah, periode)
-- `GET /api/weather/current` - Data cuaca umum (suhu, angin, tekanan)
-- `GET /api/weather/complete` - Data cuaca lengkap (maritim + umum)
-- `GET /api/weather/locations/popular` - Lokasi populer nelayan Indonesia
-- `GET /api/weather/cache/stats` - Statistik cache
-- `DELETE /api/weather/cache` - Clear cache
+| Endpoint                   | Method | Description                                   | Auth Required |
+| -------------------------- | ------ | --------------------------------------------- | ------------- |
+| `/api/weather/marine`      | GET    | Data cuaca maritim (gelombang, arah, periode) | Optional      |
+| `/api/weather/current`     | GET    | Data cuaca umum (suhu, angin, tekanan)        | Optional      |
+| `/api/weather/complete`    | GET    | Data cuaca lengkap (maritim + umum)           | Optional      |
+| `/api/weather/cache/stats` | GET    | Statistik cache weather service               | No            |
+| `/api/weather/cache`       | DELETE | Clear cache weather service                   | No            |
 
-### Authentication
+**Query Parameters:**
 
-- `POST /api/auth/verify` - Verifikasi Firebase token
-- `GET /api/auth/profile` - Profil user
-- `PUT /api/auth/profile` - Update profil user
+- `latitude` (required): Koordinat latitude (-90 to 90)
+- `longitude` (required): Koordinat longitude (-180 to 180)
+- `timezone` (optional): WIB/WITA/WIT atau full timezone (auto-detect jika kosong)
+- `forecast_days` (optional): Jumlah hari forecast (1-16, recommend max 7)
 
-### Safety & Predictions (Coming Soon)
+### 🤖 AI-Powered Features
 
-- `GET /api/safety` - Analisis zona keamanan
-- `GET /api/predictions` - Prediksi waktu aman berlayar
+| Endpoint                     | Method | Description                                         | Auth Required |
+| ---------------------------- | ------ | --------------------------------------------------- | ------------- |
+| `/api/ai/explain-conditions` | POST   | Penjelasan kondisi laut dalam bahasa natural        | Yes           |
+| `/api/ai/recommend-times`    | POST   | Rekomendasi waktu berlayar berdasarkan jenis perahu | Yes           |
+| `/api/ai/detect-anomalies`   | POST   | Deteksi anomali cuaca dan peringatan dini           | Yes           |
+| `/api/ai/early-warnings`     | GET    | Peringatan dini untuk lokasi tertentu               | Yes           |
+| `/api/ai/status`             | GET    | Status layanan AI                                   | No            |
 
-### Community (Coming Soon)
+### 🔐 Authentication
 
-- `GET /api/community/reports` - Laporan komunitas
-- `POST /api/community/reports` - Buat laporan baru
+| Endpoint                            | Method | Description                                |
+| ----------------------------------- | ------ | ------------------------------------------ |
+| `/api/auth/register`                | POST   | Registrasi user baru dengan email/password |
+| `/api/auth/login`                   | POST   | Login dengan email/password                |
+| `/api/auth/google-signin`           | POST   | Login dengan Google OAuth                  |
+| `/api/auth/verify`                  | POST   | Verifikasi Firebase ID token               |
+| `/api/auth/profile`                 | GET    | Mendapatkan profil user                    |
+| `/api/auth/profile`                 | PUT    | Update profil user                         |
+| `/api/auth/logout`                  | POST   | Logout user                                |
+| `/api/auth/forgot-password`         | POST   | Reset password via email                   |
+| `/api/auth/send-verification-email` | POST   | Kirim email verifikasi                     |
+| `/api/auth/account`                 | DELETE | Hapus akun user                            |
+
+## 📋 Response Format
+
+Semua API endpoint menggunakan format response yang konsisten:
+
+### Success Response
+
+```json
+{
+  "success": true,
+  "data": {
+    // Response data here
+  },
+  "message": "Success message",
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+### Error Response
+
+```json
+{
+  "success": false,
+  "error": "Error message",
+  "details": {
+    // Error details if available
+  },
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+### Validation Error Response
+
+```json
+{
+  "success": false,
+  "error": "Validation failed",
+  "details": {
+    "latitude": "Latitude harus berupa angka antara -90 dan 90",
+    "longitude": "Longitude diperlukan"
+  },
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+### 🎯 Sensitivity Levels untuk Anomaly Detection
+
+| Level      | Threshold                   | Use Case                          |
+| ---------- | --------------------------- | --------------------------------- |
+| **Low**    | Konservatif (gelombang >3m) | Experienced mariners, kapal besar |
+| **Medium** | Balanced (gelombang >2m)    | General use, recommended          |
+| **High**   | Sensitif (gelombang >1.5m)  | Beginner mariners, perahu kecil   |
+
+### 📊 Performance & Limits
+
+**Open Meteo Free Tier Limits:**
+
+- Daily: 10,000 calls/day
+- Hourly: 5,000 calls/hour
+- Forecast: Up to 16 days (recommend max 7)
+- Historical: Up to 92 days (recommend max 7)
+
+**Recommended Parameters:**
+
+- `forecast_days`: 1-7 (optimal performance)
+- `forecast_hours`: 6-168 (optimal performance)
+- `historical_days`: 1-7 (optimal performance)
 
 ## 🧪 Testing
 
@@ -135,6 +223,12 @@ npm test
 
 # Run tests in watch mode
 npm run test:watch
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run specific test file
+npm test -- weather.test.js
 ```
 
 ## 🤝 Contributing
@@ -144,6 +238,19 @@ npm run test:watch
 3. Commit changes (`git commit -m 'Add amazing feature'`)
 4. Push ke branch (`git push origin feature/amazing-feature`)
 5. Buat Pull Request
+
+### Development Guidelines
+
+- Gunakan ESLint dan Prettier untuk code formatting
+- Tulis tests untuk semua fitur baru
+- Update dokumentasi API jika menambah endpoint baru
+- Ikuti conventional commits untuk pesan commit
+
+## 📞 Support
+
+- **Documentation**: [API Documentation](https://documenter.getpostman.com/view/39730752/2sB34mhHjK)
+- **Issues**: [GitHub Issues](https://github.com/dzuura/ocean-safety-hub/issues)
+- **Email**: support@pelaut-hebat.com
 
 ## 📄 License
 

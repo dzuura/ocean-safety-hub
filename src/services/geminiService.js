@@ -12,31 +12,32 @@ class GeminiService {
 
     try {
       this.genAI = new GoogleGenerativeAI(config.gemini.apiKey);
-      this.model = this.genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-      Logger.info("Gemini AI service initialized successfully");
+      this.model = this.genAI.getGenerativeModel({
+        model: config.gemini.model,
+        generationConfig: {
+          temperature: config.gemini.temperature,
+        },
+      });
+      Logger.info(
+        `Gemini AI service initialized successfully with model: ${config.gemini.model}`
+      );
     } catch (error) {
       Logger.error("Failed to initialize Gemini AI service:", error);
       this.genAI = null;
     }
   }
 
-  /**
-   * Clean and parse JSON response from Gemini
-   * Removes markdown formatting and extracts JSON
-   */
+  // Membersihkan dan parsing response JSON dari Gemini
   _parseGeminiResponse(text) {
     try {
-      // Remove markdown code blocks if present
       let cleanText = text.trim();
 
-      // Remove ```json and ``` wrappers
       if (cleanText.startsWith("```json")) {
         cleanText = cleanText.replace(/^```json\s*/, "").replace(/\s*```$/, "");
       } else if (cleanText.startsWith("```")) {
         cleanText = cleanText.replace(/^```\s*/, "").replace(/\s*```$/, "");
       }
 
-      // Parse the cleaned JSON
       return JSON.parse(cleanText.trim());
     } catch (error) {
       Logger.error("Failed to parse Gemini response:", {
@@ -47,16 +48,12 @@ class GeminiService {
     }
   }
 
-  /**
-   * Check if Gemini service is available
-   */
+  // Mengecek apakah layanan Gemini tersedia
   isAvailable() {
     return this.genAI !== null && this.model !== null;
   }
 
-  /**
-   * Generate natural language explanation of marine conditions
-   */
+  // Menghasilkan penjelasan kondisi laut dalam bahasa natural
   async explainMarineConditions(weatherData, location = "perairan Indonesia") {
     if (!this.isAvailable()) {
       throw new Error("Gemini AI service not available");
@@ -68,7 +65,7 @@ class GeminiService {
       const response = await result.response;
       const text = response.text();
 
-      // Parse JSON response using helper method
+      // Parsing response JSON menggunakan helper method
       const explanation = this._parseGeminiResponse(text);
 
       Logger.info("Marine conditions explained successfully");
@@ -76,14 +73,12 @@ class GeminiService {
     } catch (error) {
       Logger.error("Failed to explain marine conditions:", error);
 
-      // Fallback response
+      // Response fallback
       return this._getFallbackExplanation(weatherData);
     }
   }
 
-  /**
-   * Generate personalized time recommendations based on boat type
-   */
+  // Menghasilkan rekomendasi waktu berlayar berdasarkan jenis perahu
   async generateTimeRecommendations(
     forecastData,
     boatType,
@@ -103,7 +98,7 @@ class GeminiService {
       const response = await result.response;
       const text = response.text();
 
-      // Parse JSON response using helper method
+      // Parsing response JSON menggunakan helper method
       const recommendations = this._parseGeminiResponse(text);
 
       Logger.info("Time recommendations generated successfully");
@@ -111,18 +106,17 @@ class GeminiService {
     } catch (error) {
       Logger.error("Failed to generate time recommendations:", error);
 
-      // Fallback response
+      // Response fallback
       return this._getFallbackTimeRecommendations(forecastData, boatType);
     }
   }
 
-  /**
-   * Detect anomalies and generate early warnings
-   */
+  // Mendeteksi anomali dan menghasilkan peringatan dini
   async detectAnomalies(
     currentData,
     historicalData,
-    location = "perairan Indonesia"
+    location = "perairan Indonesia",
+    options = {}
   ) {
     if (!this.isAvailable()) {
       throw new Error("Gemini AI service not available");
@@ -132,13 +126,14 @@ class GeminiService {
       const prompt = this._buildAnomalyDetectionPrompt(
         currentData,
         historicalData,
-        location
+        location,
+        options
       );
       const result = await this.model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
 
-      // Parse JSON response using helper method
+      // Parsing response JSON menggunakan helper method
       const anomalyAnalysis = this._parseGeminiResponse(text);
 
       Logger.info("Anomaly detection completed successfully");
@@ -146,16 +141,14 @@ class GeminiService {
     } catch (error) {
       Logger.error("Failed to detect anomalies:", error);
 
-      // Fallback response
+      // Response fallback
       return this._getFallbackAnomalyDetection(currentData);
     }
   }
 
-  /**
-   * Build prompt for marine conditions explanation
-   */
+  // Membangun prompt untuk penjelasan kondisi maritim
   _buildExplanationPrompt(weatherData, location) {
-    // Extract current conditions from hourly data (first entry)
+    // Ekstrak kondisi saat ini dari data hourly (entri pertama)
     const currentHour = weatherData.hourly
       ? {
           waveHeight: weatherData.hourly.wave_height?.[0] || null,
@@ -166,7 +159,7 @@ class GeminiService {
         }
       : {};
 
-    // Extract daily max conditions
+    // Ekstrak kondisi maksimal harian
     const dailyMax = weatherData.daily
       ? {
           maxWaveHeight: weatherData.daily.wave_height_max?.[0] || null,
@@ -176,14 +169,14 @@ class GeminiService {
         }
       : {};
 
-    // Determine data source info
+    // Tentukan informasi sumber data
     const dataSource = weatherData.data_source || "marine";
     const dataSourceText =
       dataSource === "weather_fallback"
         ? "(estimasi berdasarkan data angin)"
         : "(data marine langsung)";
 
-    // Determine location context
+    // Tentukan konteks lokasi
     const locationContext = this._getLocationContext(location);
 
     return `
@@ -248,97 +241,57 @@ Tugas Anda:
         : "berasal dari sensor marine"
     }
 
+PENTING: Mulai penjelasan langsung dengan "Berdasarkan..." tanpa salam pembuka seperti "Selamat pagi/siang/sore" atau sapaan lainnya.
+
 Berikan respons dalam format JSON berikut:
 {
-  "explanation": "penjelasan kondisi dalam bahasa sederhana",
+  "explanation": "penjelasan kondisi dalam bahasa sederhana dan dimulai dengan 'Berdasarkan...' tanpa salam pembuka",
   "safety_level": "AMAN/HATI-HATI/BERBAHAYA",
   "simple_advice": "saran praktis untuk nelayan",
   "local_context": "konteks lokal yang relevan untuk ${locationContext}",
   "technical_summary": "ringkasan teknis singkat"
 }
 
-Gunakan bahasa yang ramah dan mudah dipahami oleh masyarakat pesisir.
+Gunakan bahasa yang informatif dan langsung ke inti tanpa basa-basi.
 `;
   }
 
-  /**
-   * Get location context based on coordinates
-   */
+  // Mendapatkan konteks lokasi berdasarkan koordinat
   _getLocationContext(location) {
-    // Parse coordinates if in "lat, lng" format
+    // Parsing koordinat jika dalam format "lat, lng"
     if (location.includes(",")) {
       const [lat, lng] = location
         .split(",")
         .map((coord) => parseFloat(coord.trim()));
 
-      // Jakarta Bay area
-      if (lat >= -6.9 && lat <= -6.0 && lng >= 106.5 && lng <= 107.2) {
-        return "Teluk Jakarta dan sekitarnya";
-      }
+      // Menghasilkan deskripsi lokasi generik berdasarkan koordinat
+      const latDirection = lat >= 0 ? "Utara" : "Selatan";
+      const lngDirection = lng >= 0 ? "Timur" : "Barat";
 
-      // Banten coastal area
-      if (lat >= -6.5 && lat <= -5.8 && lng >= 105.8 && lng <= 106.5) {
-        return "perairan pesisir Banten";
-      }
+      // Format koordinat ke 2 desimal untuk keterbacaan
+      const formattedLat = Math.abs(lat).toFixed(2);
+      const formattedLng = Math.abs(lng).toFixed(2);
 
-      // West Java coastal area
-      if (lat >= -7.5 && lat <= -6.0 && lng >= 106.0 && lng <= 108.5) {
-        return "perairan pesisir Jawa Barat";
-      }
-
-      // Central Java coastal area
-      if (lat >= -7.5 && lat <= -6.0 && lng >= 108.5 && lng <= 111.0) {
-        return "perairan pesisir Jawa Tengah";
-      }
-
-      // East Java coastal area
-      if (lat >= -8.5 && lat <= -6.0 && lng >= 111.0 && lng <= 114.5) {
-        return "perairan pesisir Jawa Timur";
-      }
-
-      // Bali area
-      if (lat >= -8.8 && lat <= -8.0 && lng >= 114.5 && lng <= 115.8) {
-        return "perairan sekitar Bali";
-      }
-
-      // Sumatra eastern coast
-      if (lat >= -4.0 && lat <= 6.0 && lng >= 98.0 && lng <= 106.0) {
-        return "perairan pesisir timur Sumatra";
-      }
-
-      // Kalimantan southern coast
-      if (lat >= -4.5 && lat <= 0.0 && lng >= 108.0 && lng <= 117.0) {
-        return "perairan pesisir selatan Kalimantan";
-      }
-
-      // Sulawesi area
-      if (lat >= -6.0 && lat <= 2.0 && lng >= 117.0 && lng <= 125.0) {
-        return "perairan sekitar Sulawesi";
-      }
-
-      // Default for Indonesian waters
-      return "perairan Indonesia";
+      return `perairan pada koordinat ${formattedLat}° ${latDirection}, ${formattedLng}° ${lngDirection}`;
     }
 
-    // Return as-is if not coordinates
+    // Kembalikan apa adanya jika bukan koordinat
     return location;
   }
 
-  /**
-   * Build prompt for time recommendations
-   */
+  // Membangun prompt untuk rekomendasi waktu
   _buildTimeRecommendationPrompt(forecastData, boatType, location) {
     const boatSpecs = this._getBoatSpecifications(boatType);
     const locationContext = this._getLocationContext(location);
 
-    // Determine data source
+    // Tentukan sumber data
     const dataSource = forecastData.data_source || "marine";
     const dataSourceText =
       dataSource === "weather_fallback"
         ? "Estimasi berdasarkan kondisi angin (area pesisir)"
         : "Data marine langsung (laut dalam)";
 
-    // Extract and format forecast data for better readability
+    // Ekstrak dan format data forecast untuk keterbacaan yang lebih baik
     const forecastSummary = forecastData.forecast
       ? forecastData.forecast
           .slice(0, 24)
@@ -422,11 +375,14 @@ Fokus pada keselamatan nelayan dan berikan rekomendasi yang praktis untuk ${loca
 `;
   }
 
-  /**
-   * Build prompt for anomaly detection
-   */
-  _buildAnomalyDetectionPrompt(currentData, historicalData, location) {
-    // Extract current conditions from marine data
+  // Membangun prompt untuk deteksi anomali
+  _buildAnomalyDetectionPrompt(
+    currentData,
+    historicalData,
+    location,
+    options = {}
+  ) {
+    // Ekstrak kondisi saat ini dari data marine
     const currentHour = currentData.hourly
       ? {
           waveHeight: currentData.hourly.wave_height?.[0] || null,
@@ -446,11 +402,11 @@ Fokus pada keselamatan nelayan dan berikan rekomendasi yang praktis untuk ${loca
         }
       : {};
 
-    // Determine data source and location context
+    // Tentukan sumber data dan konteks lokasi
     const dataSource = currentData.data_source || "marine";
     const locationContext = this._getLocationContext(location);
 
-    // Extract historical patterns if available
+    // Ekstrak pola historis jika tersedia
     const historicalSummary = historicalData
       ? `Data historis tersedia untuk perbandingan`
       : `Data historis tidak tersedia - menggunakan analisis kondisi saat ini`;
@@ -509,19 +465,20 @@ KONDISI MAKSIMAL HARI INI:
 
 DATA HISTORIS: ${historicalSummary}
 
+TINGKAT SENSITIVITAS: ${options.sensitivity || "medium"}
+
 TUGAS ANALISIS:
-1. Deteksi anomali berdasarkan kondisi gelombang:
-   - Gelombang tinggi tidak normal (> 2m untuk perahu kecil, > 4m untuk kapal besar)
-   - Perubahan arah gelombang drastis (> 90° dalam waktu singkat)
-   - Periode gelombang tidak normal (< 2 detik atau > 15 detik)
-   - Perbedaan signifikan antara gelombang angin dan swell
+1. Deteksi anomali berdasarkan kondisi gelombang dengan sensitivitas ${
+      options.sensitivity || "medium"
+    }:
+   ${this._getSensitivityThresholds(options.sensitivity || "medium")}
 
 2. Analisis pola cuaca untuk ${locationContext}:
    - Kondisi berbahaya untuk jenis perahu tertentu
    - Potensi cuaca buruk berdasarkan tren gelombang
    - Rekomendasi keselamatan spesifik untuk area ini
 
-3. Berikan peringatan yang sesuai dengan kondisi lokal
+3. Berikan peringatan yang sesuai dengan kondisi lokal dan tingkat sensitivitas
 
 Berikan respons dalam format JSON berikut:
 {
@@ -552,9 +509,31 @@ Fokus pada keselamatan nelayan dan berikan analisis yang relevan untuk ${locatio
 `;
   }
 
-  /**
-   * Get boat specifications for safety thresholds
-   */
+  // Mendapatkan threshold sensitivitas untuk deteksi anomali
+  _getSensitivityThresholds(sensitivity) {
+    switch (sensitivity) {
+      case "low":
+        return `- Gelombang tinggi tidak normal (> 3m untuk perahu kecil, > 5m untuk kapal besar)
+   - Perubahan arah gelombang drastis (> 120° dalam waktu singkat)
+   - Periode gelombang sangat tidak normal (< 1 detik atau > 20 detik)
+   - Perbedaan ekstrem antara gelombang angin dan swell (> 2m)`;
+
+      case "high":
+        return `- Gelombang tinggi tidak normal (> 1m untuk perahu kecil, > 2.5m untuk kapal besar)
+   - Perubahan arah gelombang drastis (> 45° dalam waktu singkat)
+   - Periode gelombang tidak normal (< 3 detik atau > 10 detik)
+   - Perbedaan signifikan antara gelombang angin dan swell (> 0.5m)`;
+
+      case "medium":
+      default:
+        return `- Gelombang tinggi tidak normal (> 2m untuk perahu kecil, > 4m untuk kapal besar)
+   - Perubahan arah gelombang drastis (> 90° dalam waktu singkat)
+   - Periode gelombang tidak normal (< 2 detik atau > 15 detik)
+   - Perbedaan signifikan antara gelombang angin dan swell (> 1m)`;
+    }
+  }
+
+  // Mendapatkan spesifikasi perahu untuk threshold keamanan
   _getBoatSpecifications(boatType) {
     const specs = {
       perahu_kecil: {
@@ -574,12 +553,10 @@ Fokus pada keselamatan nelayan dan berikan analisis yang relevan untuk ${locatio
       },
     };
 
-    return specs[boatType] || specs["kapal_nelayan"]; // default to medium boat
+    return specs[boatType] || specs["kapal_nelayan"]; // default ke kapal menengah
   }
 
-  /**
-   * Fallback explanation when AI is not available
-   */
+  // Penjelasan fallback ketika AI tidak tersedia
   _getFallbackExplanation(weatherData) {
     const waveHeight = weatherData.waveHeight || 0;
     const windSpeed = weatherData.windSpeed || 0;
@@ -605,10 +582,8 @@ Fokus pada keselamatan nelayan dan berikan analisis yang relevan untuk ${locatio
     };
   }
 
-  /**
-   * Fallback time recommendations when AI is not available
-   */
-  _getFallbackTimeRecommendations(forecastData, boatType) {
+  // Rekomendasi waktu fallback ketika AI tidak tersedia
+  _getFallbackTimeRecommendations(_forecastData, boatType) {
     return {
       boat_type: boatType,
       safe_windows: [
@@ -631,10 +606,8 @@ Fokus pada keselamatan nelayan dan berikan analisis yang relevan untuk ${locatio
     };
   }
 
-  /**
-   * Fallback anomaly detection when AI is not available
-   */
-  _getFallbackAnomalyDetection(currentData) {
+  // Deteksi anomali fallback ketika AI tidak tersedia
+  _getFallbackAnomalyDetection(_currentData) {
     return {
       alert_level: "RENDAH",
       detected_anomalies: [],

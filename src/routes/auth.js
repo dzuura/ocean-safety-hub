@@ -6,15 +6,11 @@ const Logger = require("../utils/logger");
 
 const router = express.Router();
 
-/**
- * POST /api/auth/register
- * Registrasi user baru dengan email/password
- */
+// Registrasi user baru dengan email/password
 router.post("/register", async (req, res) => {
   try {
     const { email, password, name } = req.body;
 
-    // Validasi input
     if (!email || !password) {
       return ApiResponse.badRequest(res, "Email dan password diperlukan");
     }

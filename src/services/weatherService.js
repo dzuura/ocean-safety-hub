@@ -2,16 +2,50 @@ const axios = require("axios");
 const config = require("../config");
 const Logger = require("../utils/logger");
 
-/**
- * Weather Service untuk mengintegrasikan Open Meteo API
- * Mendapatkan data cuaca laut, gelombang, dan kondisi maritim
- */
 class WeatherService {
   constructor() {
     this.baseUrl = config.openMeteo.baseUrl;
     this.marineUrl = config.openMeteo.marineUrl;
     this.cache = new Map();
-    this.cacheTimeout = config.cache.ttlSeconds * 1000; // Convert to milliseconds
+    this.cacheTimeout = config.cache.ttlSeconds * 1000;
+  }
+
+  // Mengkonversi singkatan timezone Indonesia ke nama lengkap
+  _convertTimezone(timezone) {
+    const timezoneMap = {
+      WIB: "Asia/Jakarta", // Waktu Indonesia Barat (UTC+7)
+      WITA: "Asia/Makassar", // Waktu Indonesia Tengah (UTC+8)
+      WIT: "Asia/Jayapura", // Waktu Indonesia Timur (UTC+9)
+      wib: "Asia/Jakarta", // Case insensitive
+      wita: "Asia/Makassar",
+      wit: "Asia/Jayapura",
+    };
+
+    return timezoneMap[timezone] || timezone || "Asia/Jakarta";
+  }
+
+  // Mendeteksi timezone Indonesia berdasarkan koordinat
+  _autoDetectTimezone(_latitude, longitude) {
+    const lng = parseFloat(longitude);
+
+    if (lng > 135) {
+      return "Asia/Jayapura"; // WIT
+    }
+
+    if (lng > 115) {
+      return "Asia/Makassar"; // WITA
+    }
+
+    return "Asia/Jakarta"; // WIB
+  }
+
+  // Mendapatkan timezone yang sesuai (auto-detect jika tidak disediakan)
+  _getTimezone(timezone, latitude, longitude) {
+    if (timezone) {
+      return this._convertTimezone(timezone);
+    }
+
+    return this._autoDetectTimezone(latitude, longitude);
   }
 
   /**
@@ -82,7 +116,7 @@ class WeatherService {
           "wind_wave_direction_dominant",
           "wind_wave_period_max",
         ].join(","),
-        timezone: options.timezone || "Asia/Jakarta",
+        timezone: this._getTimezone(options.timezone, latitude, longitude),
         forecast_days: options.forecastDays || 7,
         ...options.additionalParams,
       };
@@ -267,7 +301,7 @@ class WeatherService {
   /**
    * Get marine weather forecast for specified hours
    */
-  async getMarineForecast(latitude, longitude, hours = 24) {
+  async getMarineForecast(latitude, longitude, hours = 24, options = {}) {
     try {
       Logger.info("Fetching marine forecast", { latitude, longitude, hours });
 
@@ -286,7 +320,7 @@ class WeatherService {
           "swell_wave_period",
         ].join(","),
         forecast_days: Math.ceil(hours / 24).toString(), // Convert hours to days
-        timezone: "Asia/Jakarta",
+        timezone: this._getTimezone(options.timezone, latitude, longitude),
       };
 
       const response = await axios.get(this.marineUrl, {
@@ -359,9 +393,11 @@ class WeatherService {
     try {
       Logger.info("Fetching historical weather", { latitude, longitude, days });
 
+      // Calculate date range (max 92 days, but recommend max 7 for optimal performance)
       const endDate = new Date();
+      endDate.setDate(endDate.getDate() - 1); // Yesterday as end date
       const startDate = new Date();
-      startDate.setDate(endDate.getDate() - days);
+      startDate.setDate(endDate.getDate() - Math.min(days - 1, 91)); // Max 92 days
 
       const params = {
         latitude: latitude.toString(),
@@ -369,23 +405,19 @@ class WeatherService {
         start_date: startDate.toISOString().split("T")[0],
         end_date: endDate.toISOString().split("T")[0],
         hourly: [
-          "wave_height",
-          "wave_direction",
-          "wave_period",
           "wind_speed_10m",
           "wind_direction_10m",
-          "surface_pressure",
+          "wind_gusts_10m",
+          "temperature_2m",
+          "pressure_msl",
         ].join(","),
         timezone: "Asia/Jakarta",
       };
 
-      // Note: Open-Meteo archive API might have different endpoint
-      // For now, we'll use a simplified approach
-      const response = await axios.get(this.marineUrl, {
-        params: {
-          ...params,
-          past_days: days,
-        },
+      // Use Archive API for historical data
+      const archiveUrl = "https://archive-api.open-meteo.com/v1/archive";
+      const response = await axios.get(archiveUrl, {
+        params,
         timeout: 10000,
       });
 
@@ -394,14 +426,20 @@ class WeatherService {
         const historical = [];
 
         for (let i = 0; i < hourlyData.time.length; i++) {
+          const windSpeed = hourlyData.wind_speed_10m[i] || 0;
+          const estimatedWaveHeight = this._estimateWaveHeight(windSpeed);
+
           historical.push({
             time: hourlyData.time[i],
-            wave_height: hourlyData.wave_height[i],
-            wave_direction: hourlyData.wave_direction[i],
-            wave_period: hourlyData.wave_period[i],
-            wind_speed: hourlyData.wind_speed_10m[i],
+            // Estimated wave data from historical wind
+            wave_height: estimatedWaveHeight,
+            wave_direction: hourlyData.wind_direction_10m[i],
+            wave_period: this._estimateWavePeriod(estimatedWaveHeight),
+            wind_speed: windSpeed,
             wind_direction: hourlyData.wind_direction_10m[i],
-            pressure: hourlyData.surface_pressure?.[i] || null,
+            wind_gusts: hourlyData.wind_gusts_10m?.[i] || null,
+            temperature: hourlyData.temperature_2m?.[i] || null,
+            pressure: hourlyData.pressure_msl?.[i] || null,
           });
         }
 
@@ -409,10 +447,11 @@ class WeatherService {
           success: true,
           data: {
             location: { latitude, longitude },
-            period_days: days,
+            period_days: Math.min(days, 92),
             start_date: startDate.toISOString().split("T")[0],
             end_date: endDate.toISOString().split("T")[0],
             historical: historical,
+            data_source: "archive_weather_estimated",
             retrieved_at: new Date().toISOString(),
           },
         };
@@ -421,9 +460,23 @@ class WeatherService {
       throw new Error("Invalid historical data structure");
     } catch (error) {
       Logger.error("Failed to get historical weather:", error);
+      Logger.warn("Historical weather not available, using fallback", {
+        latitude,
+        longitude,
+        error: error.message,
+      });
+
+      // Return fallback historical data (simplified)
       return {
-        success: false,
-        error: error.message || "Failed to fetch historical weather data",
+        success: true,
+        data: {
+          location: { latitude, longitude },
+          period_days: days,
+          historical: [],
+          data_source: "historical_not_available",
+          retrieved_at: new Date().toISOString(),
+          note: "Historical data not available for this location",
+        },
       };
     }
   }
@@ -558,6 +611,59 @@ class WeatherService {
   }
 
   /**
+   * Aggregate hourly data to daily maximums
+   */
+  _aggregateHourlyToDaily(hourlyData) {
+    const dailyData = {
+      time: [],
+      wave_height_max: [],
+      wave_direction_dominant: [],
+      wave_period_max: [],
+      wind_wave_height_max: [],
+      wind_wave_direction_dominant: [],
+      wind_wave_period_max: [],
+    };
+
+    // Group hourly data by date
+    const dailyGroups = {};
+    for (let i = 0; i < hourlyData.time.length; i++) {
+      const date = hourlyData.time[i].split("T")[0]; // Get date part only
+      if (!dailyGroups[date]) {
+        dailyGroups[date] = {
+          wave_heights: [],
+          wave_directions: [],
+          wave_periods: [],
+          wind_wave_heights: [],
+          wind_wave_directions: [],
+          wind_wave_periods: [],
+        };
+      }
+
+      dailyGroups[date].wave_heights.push(hourlyData.wave_height[i]);
+      dailyGroups[date].wave_directions.push(hourlyData.wave_direction[i]);
+      dailyGroups[date].wave_periods.push(hourlyData.wave_period[i]);
+      dailyGroups[date].wind_wave_heights.push(hourlyData.wind_wave_height[i]);
+      dailyGroups[date].wind_wave_directions.push(
+        hourlyData.wind_wave_direction[i]
+      );
+      dailyGroups[date].wind_wave_periods.push(hourlyData.wind_wave_period[i]);
+    }
+
+    // Calculate daily maximums
+    for (const [date, data] of Object.entries(dailyGroups)) {
+      dailyData.time.push(date);
+      dailyData.wave_height_max.push(Math.max(...data.wave_heights));
+      dailyData.wave_direction_dominant.push(data.wave_directions[0]); // Use first direction as dominant
+      dailyData.wave_period_max.push(Math.max(...data.wave_periods));
+      dailyData.wind_wave_height_max.push(Math.max(...data.wind_wave_heights));
+      dailyData.wind_wave_direction_dominant.push(data.wind_wave_directions[0]);
+      dailyData.wind_wave_period_max.push(Math.max(...data.wind_wave_periods));
+    }
+
+    return dailyData;
+  }
+
+  /**
    * Fallback marine weather for coastal areas without marine data
    * Uses regular weather API with estimated wave data (same format as getMarineWeather)
    */
@@ -574,19 +680,11 @@ class WeatherService {
         hourly: [
           "wind_speed_10m",
           "wind_direction_10m",
-          "wind_gusts_10m",
           "temperature_2m",
           "pressure_msl",
         ].join(","),
-        daily: [
-          "wind_speed_10m_max",
-          "wind_direction_10m_dominant",
-          "wind_gusts_10m_max",
-          "temperature_2m_max",
-          "temperature_2m_min",
-        ].join(","),
-        forecast_days: options.forecastDays || 7,
-        timezone: options.timezone || "Asia/Jakarta",
+        forecast_days: Math.min(options.forecastDays || 1, 7), // Limit to max 7 days (optimal for free tier)
+        timezone: this._getTimezone(options.timezone, latitude, longitude),
       };
 
       const response = await axios.get(`${this.baseUrl}/forecast`, {
@@ -596,7 +694,6 @@ class WeatherService {
 
       if (response.data && response.data.hourly) {
         const hourlyData = response.data.hourly;
-        const dailyData = response.data.daily;
 
         // Generate estimated marine data for hourly
         const estimatedHourly = {
@@ -612,9 +709,9 @@ class WeatherService {
           swell_wave_period: [],
         };
 
-        // Generate estimated marine data for daily
+        // Generate simple daily data from hourly (aggregate by day)
         const estimatedDaily = {
-          time: dailyData.time,
+          time: [],
           wave_height_max: [],
           wave_direction_dominant: [],
           wave_period_max: [],
@@ -646,25 +743,19 @@ class WeatherService {
           );
         }
 
-        // Process daily data
-        for (let i = 0; i < dailyData.time.length; i++) {
-          const windSpeedMax = dailyData.wind_speed_10m_max[i] || 0;
-          const windDirection = dailyData.wind_direction_10m_dominant[i] || 0;
-          const estimatedWaveHeightMax = this._estimateWaveHeight(windSpeedMax);
-
-          estimatedDaily.wave_height_max.push(estimatedWaveHeightMax);
-          estimatedDaily.wave_direction_dominant.push(windDirection);
-          estimatedDaily.wave_period_max.push(
-            this._estimateWavePeriod(estimatedWaveHeightMax)
-          );
-          estimatedDaily.wind_wave_height_max.push(
-            estimatedWaveHeightMax * 0.7
-          );
-          estimatedDaily.wind_wave_direction_dominant.push(windDirection);
-          estimatedDaily.wind_wave_period_max.push(
-            this._estimateWavePeriod(estimatedWaveHeightMax * 0.7)
-          );
-        }
+        // Generate daily aggregates from hourly data
+        const dailyAggregates = this._aggregateHourlyToDaily(estimatedHourly);
+        estimatedDaily.time = dailyAggregates.time;
+        estimatedDaily.wave_height_max = dailyAggregates.wave_height_max;
+        estimatedDaily.wave_direction_dominant =
+          dailyAggregates.wave_direction_dominant;
+        estimatedDaily.wave_period_max = dailyAggregates.wave_period_max;
+        estimatedDaily.wind_wave_height_max =
+          dailyAggregates.wind_wave_height_max;
+        estimatedDaily.wind_wave_direction_dominant =
+          dailyAggregates.wind_wave_direction_dominant;
+        estimatedDaily.wind_wave_period_max =
+          dailyAggregates.wind_wave_period_max;
 
         return {
           location: {

@@ -9,6 +9,8 @@
 - **⚖️ Safety Prediction System**: Sistem prediksi keamanan berlayar dengan penilaian kuantitatif (0-100)
 - **🗺️ Analisis Zona Aman**: Analisis zona keamanan dengan grid mapping untuk area planning
 - **🛣️ Rekomendasi Route Aman**: Rekomendasi rute aman dengan waypoint analysis
+- **🏘️ Komunitas Nelayan**: Platform komunitas untuk berbagi informasi dan koordinasi antar nelayan
+- **📊 Laporan Kondisi Laut**: Sistem laporan real-time dari nelayan dengan verifikasi dan voting
 - **⏰ Rekomendasi Waktu Berlayar**: Saran waktu terbaik berdasarkan jenis perahu dan kondisi cuaca
 - **🚨 Deteksi Anomali & Peringatan Dini**: Sistem deteksi pola cuaca tidak normal dengan berbagai tingkat sensitivitas
 - **🗺️ Auto-Detection Timezone**: Deteksi otomatis zona waktu Indonesia (WIB/WITA/WIT) berdasarkan koordinat
@@ -82,22 +84,35 @@ src/
 │   ├── weatherController.js    # Weather & marine data
 │   ├── aiController.js         # AI-powered features
 │   ├── safetyController.js     # Safety prediction system
+│   ├── communityController.js  # Community management
+│   ├── reportController.js     # Report management
 │   └── authController.js       # Authentication
 ├── middleware/      # Custom middleware
+│   ├── auth.js      # Authentication middleware
+│   └── validation.js # Input validation
 ├── models/          # Database models
+│   ├── Community.js # Community model
+│   ├── Report.js    # Report model
+│   └── Discussion.js # Discussion model
 ├── routes/          # API routes
 │   ├── weather.js   # Weather endpoints
 │   ├── ai.js        # AI endpoints
 │   ├── safety.js    # Safety endpoints
+│   ├── community.js # Community endpoints
+│   ├── report.js    # Report endpoints
 │   └── auth.js      # Auth endpoints
 ├── services/        # Business logic & external API integrations
 │   ├── weatherService.js       # Weather data integration
 │   ├── aiService.js            # AI service integration
-│   └── safetyAnalyzer.js       # Safety analysis algorithms
+│   ├── safetyAnalyzer.js       # Safety analysis algorithms
+│   ├── communityService.js     # Community operations
+│   └── reportService.js        # Report operations
 ├── utils/           # Utility functions
 └── docs/            # Documentation
     ├── SAFETY_SYSTEMS_COMPARISON.md
-    └── SAFETY_API_REFERENCE.md
+    ├── SAFETY_API_REFERENCE.md
+    ├── COMMUNITY_API_REFERENCE.md
+    └── REPORT_API_REFERENCE.md
 ```
 
 ## 🔧 Environment Variables
@@ -131,13 +146,6 @@ Key variables:
 | `/api/weather/cache/stats` | GET    | Statistik cache weather service               | No            |
 | `/api/weather/cache`       | DELETE | Clear cache weather service                   | No            |
 
-**Query Parameters:**
-
-- `latitude` (required): Koordinat latitude (-90 to 90)
-- `longitude` (required): Koordinat longitude (-180 to 180)
-- `timezone` (optional): WIB/WITA/WIT atau full timezone (auto-detect jika kosong)
-- `forecast_days` (optional): Jumlah hari forecast (1-16, recommend max 7)
-
 ### ⚖️ Safety Prediction System
 
 | Endpoint              | Method | Description                                      | Auth Required |
@@ -146,14 +154,36 @@ Key variables:
 | `/api/safety/zones`   | GET    | Grid analysis zona keamanan dalam area tertentu  | Optional      |
 | `/api/safety/route`   | GET    | Rekomendasi rute aman dengan waypoint analysis   | Optional      |
 
-**Query Parameters untuk Safety Endpoints:**
+### 🏘️ Community Management
 
-- `latitude` / `start_lat` (required): Koordinat latitude
-- `longitude` / `start_lng` (required): Koordinat longitude
-- `boat_type` (optional): `perahu_kecil`, `kapal_nelayan`, `kapal_besar` (default: `kapal_nelayan`)
-- `radius` (optional): Radius area dalam km untuk zones analysis
-- `grid_size` (optional): Ukuran grid untuk zones analysis (3-10)
-- `waypoints` (optional): Jumlah waypoint untuk route analysis (1-10)
+| Endpoint                        | Method | Description                             | Auth Required |
+| ------------------------------- | ------ | --------------------------------------- | ------------- |
+| `/api/community`                | POST   | Membuat komunitas baru                  | Yes           |
+| `/api/community/search`         | GET    | Mencari komunitas dengan filter         | Optional      |
+| `/api/community/my`             | GET    | Daftar komunitas yang diikuti pengguna  | Yes           |
+| `/api/community/:id`            | GET    | Detail komunitas                        | Optional      |
+| `/api/community/:id`            | PUT    | Update komunitas (admin/moderator only) | Yes           |
+| `/api/community/:id`            | DELETE | Hapus komunitas (admin only)            | Yes           |
+| `/api/community/:id/join`       | POST   | Bergabung dengan komunitas              | Yes           |
+| `/api/community/:id/leave`      | POST   | Keluar dari komunitas                   | Yes           |
+| `/api/community/:id/members`    | GET    | Daftar anggota komunitas                | Optional      |
+| `/api/community/:id/moderators` | POST   | Tambah moderator (admin only)           | Yes           |
+| `/api/community/:id/moderators` | DELETE | Hapus moderator (admin only)            | Yes           |
+
+### 📊 Report Management
+
+| Endpoint                          | Method | Description                                  | Auth Required |
+| --------------------------------- | ------ | -------------------------------------------- | ------------- |
+| `/api/report`                     | POST   | Membuat laporan kondisi laut                 | Yes           |
+| `/api/report/search`              | GET    | Mencari laporan dengan filter                | Optional      |
+| `/api/report/location`            | GET    | Laporan berdasarkan koordinat                | Optional      |
+| `/api/report/:id`                 | GET    | Detail laporan                               | Optional      |
+| `/api/report/:id`                 | PUT    | Update laporan (author/moderator only)       | Yes           |
+| `/api/report/:id`                 | DELETE | Hapus laporan (author/moderator only)        | Yes           |
+| `/api/report/:id/vote`            | POST   | Vote pada laporan (upvote/downvote + rating) | Yes           |
+| `/api/report/:id/verify`          | POST   | Verifikasi laporan (moderator only)          | Yes           |
+| `/api/report/:id/comments`        | POST   | Tambah komentar pada laporan                 | Yes           |
+| `/api/report/community/:id/stats` | GET    | Statistik laporan komunitas                  | Optional      |
 
 ### 🤖 AI-Powered Features
 
@@ -223,6 +253,36 @@ Semua API endpoint menggunakan format response yang konsisten:
   "timestamp": "2024-01-15T10:30:00.000Z"
 }
 ```
+
+## 🏘️ Fitur Komunitas & Laporan
+
+### **Community Features**
+
+- ✅ **Buat/Join Komunitas** - Nelayan dapat membuat atau bergabung dengan komunitas lokal
+- ✅ **Membership Management** - Admin komunitas dapat mengelola anggota dan moderator
+- ✅ **Public/Private Communities** - Komunitas publik dan privat dengan approval system
+- ✅ **Location-based** - Komunitas berdasarkan wilayah geografis (WIB/WITA/WIT)
+- ✅ **Search & Filter** - Pencarian komunitas dengan tags dan region
+- ✅ **Role Management** - Sistem admin, moderator, dan member
+
+### **Report Features**
+
+- ✅ **Real-time Reports** - Laporan kondisi laut dari nelayan di lapangan
+- ✅ **Verification System** - Sistem verifikasi laporan oleh moderator komunitas
+- ✅ **Voting & Rating** - Upvote/downvote dengan accuracy rating (1-5)
+- ✅ **Location-based** - Laporan berdasarkan koordinat dengan radius search
+- ✅ **Comment System** - Sistem komentar untuk diskusi laporan
+- ✅ **Urgency Levels** - 4 level urgensi (low, normal, high, critical)
+- ✅ **Safety Assessment** - Rekomendasi keamanan per jenis perahu
+- ✅ **Statistics** - Statistik laporan per komunitas
+
+### **Advanced Features**
+
+- ✅ **Media Support** - Upload foto/video dalam laporan
+- ✅ **Expiration System** - Laporan dengan waktu kedaluwarsa
+- ✅ **Confidence Scoring** - Algoritma confidence score berdasarkan voting
+- ✅ **Geolocation Search** - Pencarian berdasarkan koordinat dan radius
+- ✅ **Tag System** - Sistem tag untuk kategorisasi dan pencarian
 
 ### 📊 Performance & Limits
 

@@ -44,11 +44,15 @@ const weatherRoutes = require("./routes/weather");
 const authRoutes = require("./routes/auth");
 const aiRoutes = require("./routes/ai");
 const safetyRoutes = require("./routes/safety");
+const communityRoutes = require("./routes/community");
+const reportRoutes = require("./routes/report");
 
 app.use("/api/weather", weatherRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/safety", safetyRoutes);
+app.use("/api/community", communityRoutes);
+app.use("/api/report", reportRoutes);
 
 // Endpoint informasi API
 app.get("/api", (_req, res) => {
@@ -85,7 +89,30 @@ app.get("/api", (_req, res) => {
         zones: "/api/safety/zones (GET)",
         route: "/api/safety/route (GET)",
       },
-      community: "/api/community (coming soon)",
+      community: {
+        create: "/api/community (POST)",
+        search: "/api/community/search (GET)",
+        my: "/api/community/my (GET)",
+        detail: "/api/community/:id (GET)",
+        update: "/api/community/:id (PUT)",
+        delete: "/api/community/:id (DELETE)",
+        join: "/api/community/:id/join (POST)",
+        leave: "/api/community/:id/leave (POST)",
+        members: "/api/community/:id/members (GET)",
+        moderators: "/api/community/:id/moderators (POST/DELETE)",
+      },
+      report: {
+        create: "/api/report (POST)",
+        search: "/api/report/search (GET)",
+        location: "/api/report/location (GET)",
+        detail: "/api/report/:id (GET)",
+        update: "/api/report/:id (PUT)",
+        delete: "/api/report/:id (DELETE)",
+        vote: "/api/report/:id/vote (POST)",
+        verify: "/api/report/:id/verify (POST)",
+        comments: "/api/report/:id/comments (POST)",
+        stats: "/api/report/community/:id/stats (GET)",
+      },
     },
   });
 });

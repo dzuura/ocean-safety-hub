@@ -6,6 +6,9 @@
 
 - **🌊 Data Cuaca Maritim**: Gelombang, angin, dan kondisi laut dari Open Meteo API
 - **🤖 AI-Powered Analysis**: Penjelasan kondisi laut dalam bahasa natural menggunakan Google Gemini AI
+- **⚖️ Safety Prediction System**: Sistem prediksi keamanan berlayar dengan penilaian kuantitatif (0-100)
+- **🗺️ Analisis Zona Aman**: Analisis zona keamanan dengan grid mapping untuk area planning
+- **🛣️ Rekomendasi Route Aman**: Rekomendasi rute aman dengan waypoint analysis
 - **⏰ Rekomendasi Waktu Berlayar**: Saran waktu terbaik berdasarkan jenis perahu dan kondisi cuaca
 - **🚨 Deteksi Anomali & Peringatan Dini**: Sistem deteksi pola cuaca tidak normal dengan berbagai tingkat sensitivitas
 - **🗺️ Auto-Detection Timezone**: Deteksi otomatis zona waktu Indonesia (WIB/WITA/WIT) berdasarkan koordinat
@@ -76,11 +79,25 @@ Server akan berjalan di `http://localhost:3001`
 src/
 ├── config/          # Konfigurasi aplikasi
 ├── controllers/     # Request handlers
+│   ├── weatherController.js    # Weather & marine data
+│   ├── aiController.js         # AI-powered features
+│   ├── safetyController.js     # Safety prediction system
+│   └── authController.js       # Authentication
 ├── middleware/      # Custom middleware
 ├── models/          # Database models
 ├── routes/          # API routes
+│   ├── weather.js   # Weather endpoints
+│   ├── ai.js        # AI endpoints
+│   ├── safety.js    # Safety endpoints
+│   └── auth.js      # Auth endpoints
 ├── services/        # Business logic & external API integrations
-└── utils/           # Utility functions
+│   ├── weatherService.js       # Weather data integration
+│   ├── aiService.js            # AI service integration
+│   └── safetyAnalyzer.js       # Safety analysis algorithms
+├── utils/           # Utility functions
+└── docs/            # Documentation
+    ├── SAFETY_SYSTEMS_COMPARISON.md
+    └── SAFETY_API_REFERENCE.md
 ```
 
 ## 🔧 Environment Variables
@@ -120,6 +137,23 @@ Key variables:
 - `longitude` (required): Koordinat longitude (-180 to 180)
 - `timezone` (optional): WIB/WITA/WIT atau full timezone (auto-detect jika kosong)
 - `forecast_days` (optional): Jumlah hari forecast (1-16, recommend max 7)
+
+### ⚖️ Safety Prediction System
+
+| Endpoint              | Method | Description                                      | Auth Required |
+| --------------------- | ------ | ------------------------------------------------ | ------------- |
+| `/api/safety/analyze` | GET    | Analisis keamanan berlayar untuk lokasi tertentu | Optional      |
+| `/api/safety/zones`   | GET    | Grid analysis zona keamanan dalam area tertentu  | Optional      |
+| `/api/safety/route`   | GET    | Rekomendasi rute aman dengan waypoint analysis   | Optional      |
+
+**Query Parameters untuk Safety Endpoints:**
+
+- `latitude` / `start_lat` (required): Koordinat latitude
+- `longitude` / `start_lng` (required): Koordinat longitude
+- `boat_type` (optional): `perahu_kecil`, `kapal_nelayan`, `kapal_besar` (default: `kapal_nelayan`)
+- `radius` (optional): Radius area dalam km untuk zones analysis
+- `grid_size` (optional): Ukuran grid untuk zones analysis (3-10)
+- `waypoints` (optional): Jumlah waypoint untuk route analysis (1-10)
 
 ### 🤖 AI-Powered Features
 
@@ -189,14 +223,6 @@ Semua API endpoint menggunakan format response yang konsisten:
   "timestamp": "2024-01-15T10:30:00.000Z"
 }
 ```
-
-### 🎯 Sensitivity Levels untuk Anomaly Detection
-
-| Level      | Threshold                   | Use Case                          |
-| ---------- | --------------------------- | --------------------------------- |
-| **Low**    | Konservatif (gelombang >3m) | Experienced mariners, kapal besar |
-| **Medium** | Balanced (gelombang >2m)    | General use, recommended          |
-| **High**   | Sensitif (gelombang >1.5m)  | Beginner mariners, perahu kecil   |
 
 ### 📊 Performance & Limits
 

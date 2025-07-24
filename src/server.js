@@ -31,7 +31,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 // Endpoint health check
-app.get("/api/health", (req, res) => {
+app.get("/api/health", (_req, res) => {
   res.status(200).json({
     status: "OK",
     message: "Pelaut Hebat API is running",
@@ -43,13 +43,15 @@ app.get("/api/health", (req, res) => {
 const weatherRoutes = require("./routes/weather");
 const authRoutes = require("./routes/auth");
 const aiRoutes = require("./routes/ai");
+const safetyRoutes = require("./routes/safety");
 
 app.use("/api/weather", weatherRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/ai", aiRoutes);
+app.use("/api/safety", safetyRoutes);
 
 // Endpoint informasi API
-app.get("/api", (req, res) => {
+app.get("/api", (_req, res) => {
   res.status(200).json({
     message: "Pelaut Hebat API",
     version: "1.0.0",
@@ -78,7 +80,11 @@ app.get("/api", (req, res) => {
         "detect-anomalies": "/api/ai/detect-anomalies (POST)",
         "early-warnings": "/api/ai/early-warnings (GET)",
       },
-      safety: "/api/safety (coming soon)",
+      safety: {
+        analyze: "/api/safety/analyze (GET)",
+        zones: "/api/safety/zones (GET)",
+        route: "/api/safety/route (GET)",
+      },
       community: "/api/community (coming soon)",
     },
   });

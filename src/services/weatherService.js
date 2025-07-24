@@ -131,6 +131,8 @@ class WeatherService {
       Logger.info("Fetching marine weather data from Open Meteo", {
         latitude,
         longitude,
+        url: this.marineUrl,
+        params: JSON.stringify(params),
       });
 
       const response = await axios.get(this.marineUrl, {
@@ -257,7 +259,10 @@ class WeatherService {
         current: response.data.current,
         current_time: new Date().toISOString(),
         hourly: response.data.hourly,
-        units: response.data.current_units,
+        units: {
+          current: response.data.current_units,
+          hourly: response.data.hourly_units,
+        },
       };
 
       // Save to cache

@@ -103,6 +103,15 @@ function initializeFirebase() {
   // initializeFirebaseClient(); // Tidak diperlukan untuk backend
 }
 
+// Lazy initialization untuk db
+let _db = null;
+function getDb() {
+  if (!_db) {
+    _db = getFirestoreAdmin();
+  }
+  return _db;
+}
+
 module.exports = {
   initializeFirebase,
   getFirebaseAdmin,
@@ -111,4 +120,7 @@ module.exports = {
   getClientAuth,
   getFirestoreClient,
   verifyIdToken,
+  get db() {
+    return getDb();
+  },
 };

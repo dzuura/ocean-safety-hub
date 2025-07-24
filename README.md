@@ -1,6 +1,6 @@
 # 🌊 Pelaut Hebat - Ocean Safety Hub API
 
-**Platform keselamatan maritim Indonesia** yang menyediakan data cuaca laut real-time, analisis AI, dan sistem peringatan dini untuk nelayan dan masyarakat pesisir.
+**Platform keselamatan maritim Indonesia** yang menyediakan data cuaca laut real-time, analisis AI, sistem peringatan dini, panduan keselamatan interaktif, dan platform komunitas untuk nelayan dan masyarakat pesisir.
 
 ## ✨ Fitur Utama
 
@@ -11,6 +11,7 @@
 - **🛣️ Rekomendasi Route Aman**: Rekomendasi rute aman dengan waypoint analysis
 - **🏘️ Komunitas Nelayan**: Platform komunitas untuk berbagi informasi dan koordinasi antar nelayan
 - **📊 Laporan Kondisi Laut**: Sistem laporan real-time dari nelayan dengan verifikasi dan voting
+- **📋 Panduan Keselamatan**: Sistem checklist interaktif dengan video tutorial berdasarkan kondisi perjalanan
 - **⏰ Rekomendasi Waktu Berlayar**: Saran waktu terbaik berdasarkan jenis perahu dan kondisi cuaca
 - **🚨 Deteksi Anomali & Peringatan Dini**: Sistem deteksi pola cuaca tidak normal dengan berbagai tingkat sensitivitas
 - **🗺️ Auto-Detection Timezone**: Deteksi otomatis zona waktu Indonesia (WIB/WITA/WIT) berdasarkan koordinat
@@ -86,6 +87,7 @@ src/
 │   ├── safetyController.js     # Safety prediction system
 │   ├── communityController.js  # Community management
 │   ├── reportController.js     # Report management
+│   ├── guideController.js      # Guide management
 │   └── authController.js       # Authentication
 ├── middleware/      # Custom middleware
 │   ├── auth.js      # Authentication middleware
@@ -93,6 +95,8 @@ src/
 ├── models/          # Database models
 │   ├── Community.js # Community model
 │   ├── Report.js    # Report model
+│   ├── Guide.js     # Guide model
+│   ├── GuideSession.js # Guide session model
 │   └── Discussion.js # Discussion model
 ├── routes/          # API routes
 │   ├── weather.js   # Weather endpoints
@@ -100,19 +104,24 @@ src/
 │   ├── safety.js    # Safety endpoints
 │   ├── community.js # Community endpoints
 │   ├── report.js    # Report endpoints
+│   ├── guide.js     # Guide endpoints
 │   └── auth.js      # Auth endpoints
 ├── services/        # Business logic & external API integrations
 │   ├── weatherService.js       # Weather data integration
 │   ├── aiService.js            # AI service integration
 │   ├── safetyAnalyzer.js       # Safety analysis algorithms
 │   ├── communityService.js     # Community operations
-│   └── reportService.js        # Report operations
+│   ├── reportService.js        # Report operations
+│   └── guideService.js         # Guide operations
 ├── utils/           # Utility functions
 └── docs/            # Documentation
-    ├── SAFETY_SYSTEMS_COMPARISON.md
-    ├── SAFETY_API_REFERENCE.md
-    ├── COMMUNITY_API_REFERENCE.md
-    └── REPORT_API_REFERENCE.md
+    ├── SAFETY_API.md
+    ├── COMMUNITY_API.md
+    ├── REPORT_API.md
+    ├── GUIDE_API.md
+    ├── WEATHER_API.md
+    ├── AI_API.md
+    └── AUTH_API.md
 ```
 
 ## 🔧 Environment Variables
@@ -195,6 +204,24 @@ Key variables:
 | `/api/ai/early-warnings`     | GET    | Peringatan dini untuk lokasi tertentu               | Yes           |
 | `/api/ai/status`             | GET    | Status layanan AI                                   | No            |
 
+### 📋 Guide Management
+
+| Endpoint                                    | Method | Description                                  | Auth Required |
+| ------------------------------------------- | ------ | -------------------------------------------- | ------------- |
+| `/api/guide`                                | GET    | Daftar panduan keselamatan                   | Optional      |
+| `/api/guide/:id`                            | GET    | Detail panduan                               | Optional      |
+| `/api/guide`                                | POST   | Buat panduan baru (Admin only)               | Yes           |
+| `/api/guide/:id`                            | PUT    | Update panduan (Admin only)                  | Yes           |
+| `/api/guide/:id`                            | DELETE | Hapus panduan (Admin only)                   | Yes           |
+| `/api/guide/session/start`                  | POST   | Mulai session panduan dengan form perjalanan | Yes           |
+| `/api/guide/session/active`                 | GET    | Get session aktif pengguna                   | Yes           |
+| `/api/guide/session/history`                | GET    | Riwayat session pengguna                     | Yes           |
+| `/api/guide/session/:id/checklist`          | POST   | Generate checklist berdasarkan kondisi       | Yes           |
+| `/api/guide/session/:id/checklist/:guideId` | PUT    | Update progress checklist item               | Yes           |
+| `/api/guide/session/:id/summary`            | GET    | Rangkuman dengan video tutorial              | Yes           |
+| `/api/guide/session/:id/complete`           | POST   | Selesaikan session                           | Yes           |
+| `/api/guide/admin/statistics`               | GET    | Statistik panduan (Admin only)               | Yes           |
+
 ### 🔐 Authentication
 
 | Endpoint                            | Method | Description                                |
@@ -253,36 +280,6 @@ Semua API endpoint menggunakan format response yang konsisten:
   "timestamp": "2024-01-15T10:30:00.000Z"
 }
 ```
-
-## 🏘️ Fitur Komunitas & Laporan
-
-### **Community Features**
-
-- ✅ **Buat/Join Komunitas** - Nelayan dapat membuat atau bergabung dengan komunitas lokal
-- ✅ **Membership Management** - Admin komunitas dapat mengelola anggota dan moderator
-- ✅ **Public/Private Communities** - Komunitas publik dan privat dengan approval system
-- ✅ **Location-based** - Komunitas berdasarkan wilayah geografis (WIB/WITA/WIT)
-- ✅ **Search & Filter** - Pencarian komunitas dengan tags dan region
-- ✅ **Role Management** - Sistem admin, moderator, dan member
-
-### **Report Features**
-
-- ✅ **Real-time Reports** - Laporan kondisi laut dari nelayan di lapangan
-- ✅ **Verification System** - Sistem verifikasi laporan oleh moderator komunitas
-- ✅ **Voting & Rating** - Upvote/downvote dengan accuracy rating (1-5)
-- ✅ **Location-based** - Laporan berdasarkan koordinat dengan radius search
-- ✅ **Comment System** - Sistem komentar untuk diskusi laporan
-- ✅ **Urgency Levels** - 4 level urgensi (low, normal, high, critical)
-- ✅ **Safety Assessment** - Rekomendasi keamanan per jenis perahu
-- ✅ **Statistics** - Statistik laporan per komunitas
-
-### **Advanced Features**
-
-- ✅ **Media Support** - Upload foto/video dalam laporan
-- ✅ **Expiration System** - Laporan dengan waktu kedaluwarsa
-- ✅ **Confidence Scoring** - Algoritma confidence score berdasarkan voting
-- ✅ **Geolocation Search** - Pencarian berdasarkan koordinat dan radius
-- ✅ **Tag System** - Sistem tag untuk kategorisasi dan pencarian
 
 ### 📊 Performance & Limits
 

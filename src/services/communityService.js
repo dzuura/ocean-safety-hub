@@ -4,9 +4,31 @@ const Discussion = require("../models/Discussion");
 
 class CommunityService {
   constructor() {
-    this.collection = db.collection("communities");
-    this.discussionsCollection = db.collection("discussions");
-    this.membershipsCollection = db.collection("community_memberships");
+    // Lazy initialization untuk collections
+    this._collection = null;
+    this._discussionsCollection = null;
+    this._membershipsCollection = null;
+  }
+
+  get collection() {
+    if (!this._collection) {
+      this._collection = db.collection("communities");
+    }
+    return this._collection;
+  }
+
+  get discussionsCollection() {
+    if (!this._discussionsCollection) {
+      this._discussionsCollection = db.collection("discussions");
+    }
+    return this._discussionsCollection;
+  }
+
+  get membershipsCollection() {
+    if (!this._membershipsCollection) {
+      this._membershipsCollection = db.collection("community_memberships");
+    }
+    return this._membershipsCollection;
   }
 
   /**

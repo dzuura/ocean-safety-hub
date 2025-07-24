@@ -46,6 +46,7 @@ const aiRoutes = require("./routes/ai");
 const safetyRoutes = require("./routes/safety");
 const communityRoutes = require("./routes/community");
 const reportRoutes = require("./routes/report");
+const guideRoutes = require("./routes/guide");
 
 app.use("/api/weather", weatherRoutes);
 app.use("/api/auth", authRoutes);
@@ -53,6 +54,7 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/safety", safetyRoutes);
 app.use("/api/community", communityRoutes);
 app.use("/api/report", reportRoutes);
+app.use("/api/guide", guideRoutes);
 
 // Endpoint informasi API
 app.get("/api", (_req, res) => {
@@ -112,6 +114,21 @@ app.get("/api", (_req, res) => {
         verify: "/api/report/:id/verify (POST)",
         comments: "/api/report/:id/comments (POST)",
         stats: "/api/report/community/:id/stats (GET)",
+      },
+      guide: {
+        list: "/api/guide (GET)",
+        detail: "/api/guide/:id (GET)",
+        create: "/api/guide (POST) - Admin only",
+        update: "/api/guide/:id (PUT) - Admin only",
+        delete: "/api/guide/:id (DELETE) - Admin only",
+        statistics: "/api/guide/admin/statistics (GET) - Admin only",
+        "start-session": "/api/guide/session/start (POST)",
+        "active-session": "/api/guide/session/active (GET)",
+        "session-history": "/api/guide/session/history (GET)",
+        "generate-checklist": "/api/guide/session/:id/checklist (POST)",
+        "update-progress": "/api/guide/session/:id/checklist/:guideId (PUT)",
+        "get-summary": "/api/guide/session/:id/summary (GET)",
+        "complete-session": "/api/guide/session/:id/complete (POST)",
       },
     },
   });

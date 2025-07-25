@@ -1,8 +1,4 @@
-/**
- * Sample Data untuk Guide Module
- * Data contoh panduan keselamatan berlayar
- */
-
+// Sampel data untuk panduan keselamatan dan persiapan perjalanan laut
 const sampleGuides = [
   {
     title: "Periksa Pelampung Keselamatan",

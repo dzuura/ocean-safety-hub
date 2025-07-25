@@ -1,9 +1,8 @@
 const communityService = require("../services/communityService");
 
 class CommunityController {
-  /**
-   * Create a new community
-   */
+  
+  // Membuat komunitas baru
   createCommunity = async (req, res) => {
     try {
       const {
@@ -48,9 +47,7 @@ class CommunityController {
     }
   };
 
-  /**
-   * Get community by ID
-   */
+  // Mendapatkan detail komunitas
   getCommunity = async (req, res) => {
     try {
       const { communityId } = req.params;
@@ -66,7 +63,7 @@ class CommunityController {
         });
       }
 
-      // Check if community is private and user is not a member
+      // Cek apakah komunitas privat dan pengguna bukan anggota
       if (!community.is_public && userId && !community.isMember(userId)) {
         return res.status(403).json({
           success: false,
@@ -75,7 +72,7 @@ class CommunityController {
         });
       }
 
-      // Get members if user is a member or community is public
+      // Ambil anggota jika komunitas publik atau pengguna adalah anggota
       let members = [];
       if (community.is_public || (userId && community.isMember(userId))) {
         members = await communityService.getCommunityMembers(communityId);
@@ -100,9 +97,7 @@ class CommunityController {
     }
   };
 
-  /**
-   * Update community
-   */
+  // Update komunitas
   updateCommunity = async (req, res) => {
     try {
       const { communityId } = req.params;
@@ -137,9 +132,7 @@ class CommunityController {
     }
   };
 
-  /**
-   * Delete community
-   */
+  // Hapus komunitas
   deleteCommunity = async (req, res) => {
     try {
       const { communityId } = req.params;
@@ -168,9 +161,7 @@ class CommunityController {
     }
   };
 
-  /**
-   * Search communities
-   */
+  // Cari komunitas
   searchCommunities = async (req, res) => {
     try {
       const {
@@ -226,9 +217,7 @@ class CommunityController {
     }
   };
 
-  /**
-   * Join community
-   */
+  // Bergabung dengan komunitas
   joinCommunity = async (req, res) => {
     try {
       const { communityId } = req.params;
@@ -261,9 +250,7 @@ class CommunityController {
     }
   };
 
-  /**
-   * Leave community
-   */
+  // Keluar dari komunitas
   leaveCommunity = async (req, res) => {
     try {
       const { communityId } = req.params;
@@ -296,9 +283,7 @@ class CommunityController {
     }
   };
 
-  /**
-   * Get user's communities
-   */
+  // Daftar komunitas yang diikuti pengguna
   getUserCommunities = async (req, res) => {
     try {
       const userId = req.user.uid;
@@ -323,9 +308,7 @@ class CommunityController {
     }
   };
 
-  /**
-   * Get community members
-   */
+  // Daftar anggota komunitas
   getCommunityMembers = async (req, res) => {
     try {
       const { communityId } = req.params;
@@ -342,7 +325,7 @@ class CommunityController {
         });
       }
 
-      // Check permissions
+      // Cek apakah komunitas privat dan pengguna bukan anggota
       if (!community.is_public && (!userId || !community.isMember(userId))) {
         return res.status(403).json({
           success: false,
@@ -375,9 +358,7 @@ class CommunityController {
     }
   };
 
-  /**
-   * Add moderator to community
-   */
+  // Menambahkan moderator ke komunitas
   addModerator = async (req, res) => {
     try {
       const { communityId } = req.params;
@@ -412,9 +393,7 @@ class CommunityController {
     }
   };
 
-  /**
-   * Remove moderator from community
-   */
+  // Menghapus moderator dari komunitas
   removeModerator = async (req, res) => {
     try {
       const { communityId } = req.params;
@@ -449,9 +428,7 @@ class CommunityController {
     }
   };
 
-  /**
-   * Helper method to get user role in community
-   */
+  // Mendapatkan peran pengguna dalam komunitas
   getUserRole(community, userId) {
     if (community.isAdmin(userId)) return "admin";
     if (community.isModerator(userId)) return "moderator";

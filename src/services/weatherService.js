@@ -10,13 +10,13 @@ class WeatherService {
     this.cacheTimeout = config.cache.ttlSeconds * 1000;
   }
 
-  // Mengkonversi singkatan timezone Indonesia ke nama lengkap
+  // Konversi singkatan timezone Indonesia
   _convertTimezone(timezone) {
     const timezoneMap = {
-      WIB: "Asia/Jakarta", // Waktu Indonesia Barat (UTC+7)
-      WITA: "Asia/Makassar", // Waktu Indonesia Tengah (UTC+8)
-      WIT: "Asia/Jayapura", // Waktu Indonesia Timur (UTC+9)
-      wib: "Asia/Jakarta", // Case insensitive
+      WIB: "Asia/Jakarta",
+      WITA: "Asia/Makassar",
+      WIT: "Asia/Jayapura",
+      wib: "Asia/Jakarta",
       wita: "Asia/Makassar",
       wit: "Asia/Jayapura",
     };
@@ -24,22 +24,22 @@ class WeatherService {
     return timezoneMap[timezone] || timezone || "Asia/Jakarta";
   }
 
-  // Mendeteksi timezone Indonesia berdasarkan koordinat
+  // Auto-detect timezone berdasarkan koordinat
   _autoDetectTimezone(_latitude, longitude) {
     const lng = parseFloat(longitude);
 
     if (lng > 135) {
-      return "Asia/Jayapura"; // WIT
+      return "Asia/Jayapura";
     }
 
     if (lng > 115) {
-      return "Asia/Makassar"; // WITA
+      return "Asia/Makassar";
     }
 
-    return "Asia/Jakarta"; // WIB
+    return "Asia/Jakarta";
   }
 
-  // Mendapatkan timezone yang sesuai (auto-detect jika tidak disediakan)
+  // Mendapatkan timezone yang sesuai
   _getTimezone(timezone, latitude, longitude) {
     if (timezone) {
       return this._convertTimezone(timezone);
@@ -48,23 +48,17 @@ class WeatherService {
     return this._autoDetectTimezone(latitude, longitude);
   }
 
-  /**
-   * Generate cache key berdasarkan parameter
-   */
+  // Generate cache key berdasarkan parameter
   _generateCacheKey(params) {
     return JSON.stringify(params);
   }
 
-  /**
-   * Check apakah data di cache masih valid
-   */
+  // Cek apakah cache masih valid
   _isCacheValid(cacheEntry) {
     return Date.now() - cacheEntry.timestamp < this.cacheTimeout;
   }
 
-  /**
-   * Get data dari cache jika masih valid
-   */
+  // Dapatkan data dari cache
   _getFromCache(key) {
     const cacheEntry = this.cache.get(key);
     if (cacheEntry && this._isCacheValid(cacheEntry)) {
@@ -74,9 +68,7 @@ class WeatherService {
     return null;
   }
 
-  /**
-   * Simpan data ke cache
-   */
+  // Simpan data ke cache
   _saveToCache(key, data) {
     this.cache.set(key, {
       data,
@@ -85,13 +77,7 @@ class WeatherService {
     Logger.debug("Weather data saved to cache", { key });
   }
 
-  /**
-   * Mendapatkan data cuaca maritim dari Open Meteo
-   * @param {number} latitude - Latitude koordinat
-   * @param {number} longitude - Longitude koordinat
-   * @param {Object} options - Opsi tambahan
-   * @returns {Promise<Object>} Data cuaca maritim
-   */
+  // Mendapatkan data cuaca maritim dari Open Meteo
   async getMarineWeather(latitude, longitude, options = {}) {
     try {
       const params = {
@@ -121,7 +107,7 @@ class WeatherService {
         ...options.additionalParams,
       };
 
-      // Check cache first
+      // Cek cache terlebih dahulu
       const cacheKey = this._generateCacheKey({ type: "marine", ...params });
       const cachedData = this._getFromCache(cacheKey);
       if (cachedData) {
@@ -137,10 +123,10 @@ class WeatherService {
 
       const response = await axios.get(this.marineUrl, {
         params,
-        timeout: 10000, // 10 seconds timeout
+        timeout: 10000, // timeout 10 detik
       });
 
-      // Check if marine data is available (not all null)
+      // Cek apakah data marine tersedia
       const hasMarineData =
         response.data.hourly &&
         response.data.hourly.wave_height &&
@@ -155,7 +141,7 @@ class WeatherService {
           }
         );
 
-        // Fallback to regular weather API for coastal areas
+        // Fallback ke weather API untuk wilayah pantai
         return this._getFallbackMarineWeather(latitude, longitude, options);
       }
 
@@ -176,7 +162,7 @@ class WeatherService {
         data_source: "marine",
       };
 
-      // Save to cache
+      // Simpan ke cache
       this._saveToCache(cacheKey, weatherData);
 
       return weatherData;
@@ -186,13 +172,7 @@ class WeatherService {
     }
   }
 
-  /**
-   * Mendapatkan data cuaca umum (angin, suhu, dll)
-   * @param {number} latitude - Latitude koordinat
-   * @param {number} longitude - Longitude koordinat
-   * @param {Object} options - Opsi tambahan
-   * @returns {Promise<Object>} Data cuaca umum
-   */
+  // Mendapatkan data cuaca umum saat ini
   async getCurrentWeather(latitude, longitude, options = {}) {
     try {
       const params = {
@@ -232,7 +212,7 @@ class WeatherService {
         ...options.additionalParams,
       };
 
-      // Check cache first
+      // Cek cache terlebih dahulu
       const cacheKey = this._generateCacheKey({ type: "current", ...params });
       const cachedData = this._getFromCache(cacheKey);
       if (cachedData) {
@@ -265,7 +245,7 @@ class WeatherService {
         },
       };
 
-      // Save to cache
+      // Simpan ke cache
       this._saveToCache(cacheKey, weatherData);
 
       return weatherData;
@@ -275,13 +255,7 @@ class WeatherService {
     }
   }
 
-  /**
-   * Mendapatkan data cuaca gabungan (maritim + umum)
-   * @param {number} latitude - Latitude koordinat
-   * @param {number} longitude - Longitude koordinat
-   * @param {Object} options - Opsi tambahan
-   * @returns {Promise<Object>} Data cuaca gabungan
-   */
+  // Mendapatkan data cuaca gabungan (maritim + umum)
   async getCompleteWeather(latitude, longitude, options = {}) {
     try {
       Logger.info("Fetching complete weather data", { latitude, longitude });
@@ -303,9 +277,7 @@ class WeatherService {
     }
   }
 
-  /**
-   * Get marine weather forecast for specified hours
-   */
+  // Mendapatkan ramalan cuaca maritim untuk jangka waktu tertentu
   async getMarineForecast(latitude, longitude, hours = 24, options = {}) {
     try {
       Logger.info("Fetching marine forecast", { latitude, longitude, hours });
@@ -324,7 +296,7 @@ class WeatherService {
           "swell_wave_direction",
           "swell_wave_period",
         ].join(","),
-        forecast_days: Math.ceil(hours / 24).toString(), // Convert hours to days
+        forecast_days: Math.ceil(hours / 24).toString(), // Konversi jam ke hari
         timezone: this._getTimezone(options.timezone, latitude, longitude),
       };
 
@@ -337,7 +309,7 @@ class WeatherService {
         const hourlyData = response.data.hourly;
         const forecast = [];
 
-        // Check if marine data is available (not all null)
+        // Cek apakah data marine tersedia
         const hasMarineData = hourlyData.wave_height.some(
           (val) => val !== null
         );
@@ -351,7 +323,7 @@ class WeatherService {
             }
           );
 
-          // Fallback to regular weather API for coastal areas
+          // Fallback ke weather API untuk wilayah pantai
           return this._getFallbackWeatherForecast(latitude, longitude, hours);
         }
 
@@ -391,18 +363,16 @@ class WeatherService {
     }
   }
 
-  /**
-   * Get historical weather data for specified days
-   */
+  // Mendapatkan data cuaca historis
   async getHistoricalWeather(latitude, longitude, days = 7) {
     try {
       Logger.info("Fetching historical weather", { latitude, longitude, days });
 
-      // Calculate date range (max 92 days, but recommend max 7 for optimal performance)
+      // Kalkulasi rentang tanggal (maks 92 hari, tetapi disarankan max 7 untuk performa optimal)
       const endDate = new Date();
-      endDate.setDate(endDate.getDate() - 1); // Yesterday as end date
+      endDate.setDate(endDate.getDate() - 1); // Kemarin sebagai tanggal akhir
       const startDate = new Date();
-      startDate.setDate(endDate.getDate() - Math.min(days - 1, 91)); // Max 92 days
+      startDate.setDate(endDate.getDate() - Math.min(days - 1, 91)); // Max 92 hari
 
       const params = {
         latitude: latitude.toString(),
@@ -419,7 +389,7 @@ class WeatherService {
         timezone: "Asia/Jakarta",
       };
 
-      // Use Archive API for historical data
+      // Menggunakan API Archive untuk data historis
       const archiveUrl = "https://archive-api.open-meteo.com/v1/archive";
       const response = await axios.get(archiveUrl, {
         params,
@@ -436,7 +406,7 @@ class WeatherService {
 
           historical.push({
             time: hourlyData.time[i],
-            // Estimated wave data from historical wind
+            // Estimasi tinggi gelombang berdasarkan kecepatan angin
             wave_height: estimatedWaveHeight,
             wave_direction: hourlyData.wind_direction_10m[i],
             wave_period: this._estimateWavePeriod(estimatedWaveHeight),
@@ -471,7 +441,7 @@ class WeatherService {
         error: error.message,
       });
 
-      // Return fallback historical data (simplified)
+      // Mengembalikan fallback data historis
       return {
         success: true,
         data: {
@@ -486,17 +456,13 @@ class WeatherService {
     }
   }
 
-  /**
-   * Clear cache (untuk testing atau maintenance)
-   */
+  // Menghapus cache
   clearCache() {
     this.cache.clear();
     Logger.info("Weather service cache cleared");
   }
 
-  /**
-   * Get cache statistics
-   */
+  // Mendapatkan statistik cache
   getCacheStats() {
     return {
       size: this.cache.size,
@@ -504,10 +470,7 @@ class WeatherService {
     };
   }
 
-  /**
-   * Fallback weather forecast for coastal areas without marine data
-   * Uses regular weather API with estimated wave data
-   */
+  // Fallback untuk data cuaca historis
   async _getFallbackWeatherForecast(latitude, longitude, hours) {
     try {
       Logger.info("Using fallback weather forecast for coastal area", {
@@ -540,27 +503,27 @@ class WeatherService {
         const forecast = [];
 
         for (let i = 0; i < Math.min(hours, hourlyData.time.length); i++) {
-          // Estimate wave data based on wind conditions
+          // Estimasi data gelombang berdasarkan kecepatan angin
           const windSpeed = hourlyData.wind_speed_10m[i] || 0;
           const estimatedWaveHeight = this._estimateWaveHeight(windSpeed);
 
           forecast.push({
             time: hourlyData.time[i],
-            // Estimated marine data based on wind
+            // Estimasi data marine berdasarkan kecepatan angin
             wave_height: estimatedWaveHeight,
             wave_direction: hourlyData.wind_direction_10m[i],
             wave_period: this._estimateWavePeriod(estimatedWaveHeight),
-            wind_wave_height: estimatedWaveHeight * 0.7, // Wind waves are typically 70% of total
+            wind_wave_height: estimatedWaveHeight * 0.7, // Gelombang angin biasanya 70% dari total
             wind_wave_direction: hourlyData.wind_direction_10m[i],
             wind_wave_period: this._estimateWavePeriod(
               estimatedWaveHeight * 0.7
             ),
-            swell_wave_height: estimatedWaveHeight * 0.3, // Swell is remaining 30%
+            swell_wave_height: estimatedWaveHeight * 0.3, // Swell biasanya 30% dari total
             swell_wave_direction: hourlyData.wind_direction_10m[i],
             swell_wave_period: this._estimateWavePeriod(
               estimatedWaveHeight * 0.3
             ),
-            // Additional weather data
+            // Data cuaca lainnya
             wind_speed: hourlyData.wind_speed_10m[i],
             wind_direction: hourlyData.wind_direction_10m[i],
             wind_gusts: hourlyData.wind_gusts_10m[i],
@@ -588,12 +551,9 @@ class WeatherService {
     }
   }
 
-  /**
-   * Estimate wave height based on wind speed
-   * Using simplified Beaufort scale relationship
-   */
+  // Estimasi tinggi gelombang berdasarkan skala Beaufort
   _estimateWaveHeight(windSpeedKmh) {
-    const windSpeedMs = windSpeedKmh / 3.6; // Convert km/h to m/s
+    const windSpeedMs = windSpeedKmh / 3.6; // Konversi km/h ke m/s
 
     if (windSpeedMs < 2) return 0.1; // Calm
     if (windSpeedMs < 4) return 0.2; // Light air
@@ -607,17 +567,13 @@ class WeatherService {
     return 5.0; // Strong gale+
   }
 
-  /**
-   * Estimate wave period based on wave height
-   */
+  // Estimasi periode gelombang berdasarkan tinggi gelombang
   _estimateWavePeriod(waveHeight) {
-    // Typical relationship: T ≈ 3.5 * sqrt(H)
+    // Formula empiris: T ≈ 3.5 * sqrt(H)
     return Math.max(2.0, 3.5 * Math.sqrt(waveHeight));
   }
 
-  /**
-   * Aggregate hourly data to daily maximums
-   */
+  // Agregasi data jam ke harian
   _aggregateHourlyToDaily(hourlyData) {
     const dailyData = {
       time: [],
@@ -629,10 +585,10 @@ class WeatherService {
       wind_wave_period_max: [],
     };
 
-    // Group hourly data by date
+    // Mengelompokkan data berdasarkan tanggal
     const dailyGroups = {};
     for (let i = 0; i < hourlyData.time.length; i++) {
-      const date = hourlyData.time[i].split("T")[0]; // Get date part only
+      const date = hourlyData.time[i].split("T")[0]; // Mendapatkan bagian tanggal
       if (!dailyGroups[date]) {
         dailyGroups[date] = {
           wave_heights: [],
@@ -654,7 +610,7 @@ class WeatherService {
       dailyGroups[date].wind_wave_periods.push(hourlyData.wind_wave_period[i]);
     }
 
-    // Calculate daily maximums
+    // Kalkulasi maksimum harian
     for (const [date, data] of Object.entries(dailyGroups)) {
       dailyData.time.push(date);
       dailyData.wave_height_max.push(Math.max(...data.wave_heights));
@@ -668,10 +624,7 @@ class WeatherService {
     return dailyData;
   }
 
-  /**
-   * Fallback marine weather for coastal areas without marine data
-   * Uses regular weather API with estimated wave data (same format as getMarineWeather)
-   */
+  // Fallback untuk data cuaca maritim
   async _getFallbackMarineWeather(latitude, longitude, options = {}) {
     try {
       Logger.info("Using fallback marine weather for coastal area", {
@@ -700,7 +653,7 @@ class WeatherService {
       if (response.data && response.data.hourly) {
         const hourlyData = response.data.hourly;
 
-        // Generate estimated marine data for hourly
+        // Generate estimasi data marine berdasarkan perode jam
         const estimatedHourly = {
           time: hourlyData.time,
           wave_height: [],
@@ -714,7 +667,7 @@ class WeatherService {
           swell_wave_period: [],
         };
 
-        // Generate simple daily data from hourly (aggregate by day)
+        // Generate estimasi data harian dari data per jam
         const estimatedDaily = {
           time: [],
           wave_height_max: [],
@@ -725,7 +678,7 @@ class WeatherService {
           wind_wave_period_max: [],
         };
 
-        // Process hourly data
+        // Memproses data per jam
         for (let i = 0; i < hourlyData.time.length; i++) {
           const windSpeed = hourlyData.wind_speed_10m[i] || 0;
           const windDirection = hourlyData.wind_direction_10m[i] || 0;
@@ -748,7 +701,7 @@ class WeatherService {
           );
         }
 
-        // Generate daily aggregates from hourly data
+        // Generate data harian dari data per jam
         const dailyAggregates = this._aggregateHourlyToDaily(estimatedHourly);
         estimatedDaily.time = dailyAggregates.time;
         estimatedDaily.wave_height_max = dailyAggregates.wave_height_max;

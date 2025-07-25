@@ -31,9 +31,7 @@ class CommunityService {
     return this._membershipsCollection;
   }
 
-  /**
-   * Create a new community
-   */
+  // Membuat komunitas baru
   async createCommunity(communityData) {
     try {
       const community = new Community(communityData);
@@ -45,13 +43,13 @@ class CommunityService {
         );
       }
 
-      // Add creator as first member and admin
+      // Menambahkan admin sebagai anggota komunitas
       community.addMember(community.admin_id);
 
       const docRef = await this.collection.add(community.toFirestore());
       community.id = docRef.id;
 
-      // Create membership record
+      // Membuat membership untuk admin
       await this.createMembership(community.id, community.admin_id, "admin");
 
       console.log(`Community created: ${community.id}`);
@@ -62,9 +60,7 @@ class CommunityService {
     }
   }
 
-  /**
-   * Get community by ID
-   */
+  // Mendapatkan komunitas berdasarkan ID
   async getCommunityById(communityId) {
     try {
       const doc = await this.collection.doc(communityId).get();
@@ -80,9 +76,7 @@ class CommunityService {
     }
   }
 
-  /**
-   * Update community
-   */
+  // Mendapatkan komunitas berdasarkan nama
   async updateCommunity(communityId, updateData, userId) {
     try {
       const community = await this.getCommunityById(communityId);
@@ -116,9 +110,7 @@ class CommunityService {
     }
   }
 
-  /**
-   * Delete community
-   */
+  // Menghapus komunitas (soft delete)
   async deleteCommunity(communityId, userId) {
     try {
       const community = await this.getCommunityById(communityId);
@@ -131,7 +123,7 @@ class CommunityService {
         throw new Error("Only admin can delete community");
       }
 
-      // Soft delete - update status instead of actual deletion
+      // Soft delete - update status
       await this.collection.doc(communityId).update({
         status: "deleted",
         updated_at: new Date().toISOString(),
@@ -145,9 +137,7 @@ class CommunityService {
     }
   }
 
-  /**
-   * Search communities
-   */
+  // Mencari komunitas berdasarkan filter
   async searchCommunities(filters = {}) {
     try {
       let query = this.collection.where("status", "==", "active");
@@ -200,9 +190,7 @@ class CommunityService {
     }
   }
 
-  /**
-   * Join community
-   */
+  // Bergabung dengan komunitas
   async joinCommunity(communityId, userId) {
     try {
       const community = await this.getCommunityById(communityId);
@@ -216,15 +204,15 @@ class CommunityService {
       }
 
       if (!community.is_public && community.join_approval_required) {
-        // Create join request instead of direct join
+        // Jika komunitas tidak publik dan memerlukan persetujuan, buat permintaan bergabung
         return await this.createJoinRequest(communityId, userId);
       }
 
-      // Direct join for public communities
+      // Jika komunitas publik atau tidak memerlukan persetujuan, tambahkan anggota
       community.addMember(userId);
       await this.collection.doc(communityId).update(community.toFirestore());
 
-      // Create membership record
+      // Buat membership untuk user
       await this.createMembership(communityId, userId, "member");
 
       console.log(`User ${userId} joined community ${communityId}`);
@@ -235,9 +223,7 @@ class CommunityService {
     }
   }
 
-  /**
-   * Leave community
-   */
+  // Keluar dari komunitas
   async leaveCommunity(communityId, userId) {
     try {
       const community = await this.getCommunityById(communityId);
@@ -257,11 +243,11 @@ class CommunityService {
       }
 
       community.removeMember(userId);
-      community.removeModerator(userId); // Remove from moderators if applicable
+      community.removeModerator(userId); // Menghapus dari moderator jika ada
 
       await this.collection.doc(communityId).update(community.toFirestore());
 
-      // Remove membership record
+      // Menghapus membership user
       await this.removeMembership(communityId, userId);
 
       console.log(`User ${userId} left community ${communityId}`);
@@ -272,9 +258,7 @@ class CommunityService {
     }
   }
 
-  /**
-   * Get user's communities
-   */
+  // Mendapatkan komunitas yang diikuti oleh user
   async getUserCommunities(userId) {
     try {
       const membershipSnapshot = await this.membershipsCollection
@@ -291,7 +275,7 @@ class CommunityService {
         return [];
       }
 
-      // Get communities in batches (Firestore 'in' query limit is 10)
+      // Batched query untuk mendapatkan komunitas
       const communities = [];
       for (let i = 0; i < communityIds.length; i += 10) {
         const batch = communityIds.slice(i, i + 10);
@@ -312,9 +296,7 @@ class CommunityService {
     }
   }
 
-  /**
-   * Create membership record
-   */
+  // Membuat permintaan bergabung komunitas
   async createMembership(communityId, userId, role = "member") {
     try {
       const membershipData = {
@@ -333,9 +315,7 @@ class CommunityService {
     }
   }
 
-  /**
-   * Remove membership record
-   */
+  // Menghapus membership user dari komunitas
   async removeMembership(communityId, userId) {
     try {
       const snapshot = await this.membershipsCollection
@@ -359,9 +339,7 @@ class CommunityService {
     }
   }
 
-  /**
-   * Get community members with their roles
-   */
+  // Mendapatkan anggota komunitas
   async getCommunityMembers(communityId, limit = 50) {
     try {
       const snapshot = await this.membershipsCollection
@@ -382,9 +360,7 @@ class CommunityService {
     }
   }
 
-  /**
-   * Add moderator to community
-   */
+  // Menambahkan moderator ke komunitas
   async addModerator(communityId, userId, adminId) {
     try {
       const community = await this.getCommunityById(communityId);
@@ -404,7 +380,7 @@ class CommunityService {
       community.addModerator(userId);
       await this.collection.doc(communityId).update(community.toFirestore());
 
-      // Update membership role
+      // Update membership role ke moderator
       const membershipSnapshot = await this.membershipsCollection
         .where("community_id", "==", communityId)
         .where("user_id", "==", userId)
@@ -425,9 +401,7 @@ class CommunityService {
     }
   }
 
-  /**
-   * Remove moderator from community
-   */
+  // Menghapus moderator dari komunitas
   async removeModerator(communityId, userId, adminId) {
     try {
       const community = await this.getCommunityById(communityId);
@@ -443,7 +417,7 @@ class CommunityService {
       community.removeModerator(userId);
       await this.collection.doc(communityId).update(community.toFirestore());
 
-      // Update membership role
+      // Update membership role ke member
       const membershipSnapshot = await this.membershipsCollection
         .where("community_id", "==", communityId)
         .where("user_id", "==", userId)

@@ -1,8 +1,4 @@
-/**
- * Discussion Model
- * Represents a discussion thread in a community
- */
-
+// Model untuk diskusi dalam komunitas
 class Discussion {
   constructor(data = {}) {
     this.id = data.id || null;
@@ -20,7 +16,7 @@ class Discussion {
     this.reply_count = data.reply_count || 0;
     this.view_count = data.view_count || 0;
     this.like_count = data.like_count || 0;
-    this.liked_by = data.liked_by || []; // Array of user IDs
+    this.liked_by = data.liked_by || []; // Array user ID
     this.last_reply_at = data.last_reply_at || null;
     this.last_reply_by = data.last_reply_by || null;
     this.media = data.media || {
@@ -33,9 +29,7 @@ class Discussion {
     this.status = data.status || 'active'; // active, archived, deleted
   }
 
-  /**
-   * Validate discussion data
-   */
+  // Validasi data diskusi
   validate() {
     const errors = {};
 
@@ -66,9 +60,7 @@ class Discussion {
     };
   }
 
-  /**
-   * Convert to Firestore document
-   */
+  // Konversi ke format Firestore
   toFirestore() {
     const { id, ...data } = this;
     return {
@@ -77,9 +69,7 @@ class Discussion {
     };
   }
 
-  /**
-   * Create from Firestore document
-   */
+  // Membuat objek Discussion dari data Firestore
   static fromFirestore(doc) {
     return new Discussion({
       id: doc.id,
@@ -87,23 +77,17 @@ class Discussion {
     });
   }
 
-  /**
-   * Check if user can edit this discussion
-   */
+  // Cek apakah user dapat mengedit diskusi
   canEdit(userId, userRole = 'member') {
     return this.author_id === userId || userRole === 'moderator' || userRole === 'admin';
   }
 
-  /**
-   * Check if user can reply to this discussion
-   */
+  // Cek apakah user dapat menambahkan balasan
   canReply(userRole = 'member') {
     return !this.is_locked || userRole === 'moderator' || userRole === 'admin';
   }
 
-  /**
-   * Add reply to discussion
-   */
+  // Menambahkan balasan
   addReply(reply) {
     const newReply = {
       id: Date.now().toString(),
@@ -122,24 +106,22 @@ class Discussion {
     return newReply;
   }
 
-  /**
-   * Remove reply from discussion
-   */
+  // Menghapus balasan
   removeReply(replyId, userId, userRole = 'member') {
     const replyIndex = this.replies.findIndex(r => r.id === replyId);
     if (replyIndex === -1) return false;
 
     const reply = this.replies[replyIndex];
     
-    // Check permissions
+    // Cek apakah user adalah penulis balasan atau moderator/admin
     if (reply.author_id !== userId && userRole !== 'moderator' && userRole !== 'admin') {
       return false;
     }
 
     this.replies.splice(replyIndex, 1);
     this.reply_count = this.replies.length;
-    
-    // Update last reply info
+
+    // Update informasi balasan terakhir
     if (this.replies.length > 0) {
       const lastReply = this.replies[this.replies.length - 1];
       this.last_reply_at = lastReply.created_at;
@@ -153,9 +135,7 @@ class Discussion {
     return true;
   }
 
-  /**
-   * Toggle like on discussion
-   */
+  // Menyukai diskusi
   toggleLike(userId) {
     const likedIndex = this.liked_by.indexOf(userId);
     
@@ -170,12 +150,10 @@ class Discussion {
     }
     
     this.updated_at = new Date().toISOString();
-    return likedIndex === -1; // Return true if liked, false if unliked
+    return likedIndex === -1; // Return true jika suka, false jika tidak suka
   }
 
-  /**
-   * Toggle like on reply
-   */
+  // Menyukai balasan
   toggleReplyLike(replyId, userId) {
     const reply = this.replies.find(r => r.id === replyId);
     if (!reply) return false;
@@ -193,20 +171,16 @@ class Discussion {
     }
     
     this.updated_at = new Date().toISOString();
-    return likedIndex === -1; // Return true if liked, false if unliked
+    return likedIndex === -1; // Return true jika suka, false jika tidak suka
   }
 
-  /**
-   * Increment view count
-   */
+  // Menambahkan view count
   incrementViewCount() {
     this.view_count++;
     this.updated_at = new Date().toISOString();
   }
 
-  /**
-   * Pin/unpin discussion
-   */
+  // Menambahkan atau menghapus pin
   togglePin(userRole) {
     if (userRole !== 'moderator' && userRole !== 'admin') {
       return false;
@@ -217,9 +191,7 @@ class Discussion {
     return true;
   }
 
-  /**
-   * Lock/unlock discussion
-   */
+  // Menambahkan atau menghapus lock
   toggleLock(userRole) {
     if (userRole !== 'moderator' && userRole !== 'admin') {
       return false;
@@ -230,9 +202,7 @@ class Discussion {
     return true;
   }
 
-  /**
-   * Mark as announcement
-   */
+  // Menambahkan atau menghapus announcement
   toggleAnnouncement(userRole) {
     if (userRole !== 'admin') {
       return false;
@@ -243,9 +213,7 @@ class Discussion {
     return true;
   }
 
-  /**
-   * Get discussion summary for list view
-   */
+  // Mendapatkan rangkuman diskusi
   getSummary() {
     return {
       id: this.id,

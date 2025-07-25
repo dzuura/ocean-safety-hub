@@ -4,9 +4,7 @@ const Logger = require("../utils/logger");
 
 let adminApp = null;
 
-/**
- * Initialize Firebase Admin SDK
- */
+// Inisialisasi Firebase Admin SDK
 function initializeFirebaseAdmin() {
   try {
     if (!adminApp && config.firebase.admin.projectId) {
@@ -35,9 +33,7 @@ function initializeFirebaseAdmin() {
   }
 }
 
-/**
- * Get Firebase Admin instance
- */
+// Mendapatkan instance Firebase Admin
 function getFirebaseAdmin() {
   if (!adminApp) {
     initializeFirebaseAdmin();
@@ -45,41 +41,19 @@ function getFirebaseAdmin() {
   return adminApp;
 }
 
-/**
- * Get Firestore Admin instance
- */
+// Mendapatkan Firestore Admin
 function getFirestoreAdmin() {
   const app = getFirebaseAdmin();
   return app ? admin.firestore() : null;
 }
 
-/**
- * Get Firebase Auth Admin instance
- */
+// Mendapatkan Auth Admin
 function getAuthAdmin() {
   const app = getFirebaseAdmin();
   return app ? admin.auth() : null;
 }
 
-/**
- * Get Firebase Client Auth instance (TIDAK DIPERLUKAN untuk backend)
- */
-function getClientAuth() {
-  Logger.warn("getClientAuth() called - consider using Admin SDK instead");
-  return null;
-}
-
-/**
- * Get Firestore Client instance (TIDAK DIPERLUKAN untuk backend)
- */
-function getFirestoreClient() {
-  Logger.warn("getFirestoreClient() called - consider using Admin SDK instead");
-  return null;
-}
-
-/**
- * Verify Firebase ID Token
- */
+// Verifikasi ID Token
 async function verifyIdToken(idToken) {
   try {
     const authAdmin = getAuthAdmin();
@@ -95,12 +69,9 @@ async function verifyIdToken(idToken) {
   }
 }
 
-/**
- * Initialize Firebase services (Backend hanya butuh Admin SDK)
- */
+// Inisialisasi Firebase
 function initializeFirebase() {
   initializeFirebaseAdmin();
-  // initializeFirebaseClient(); // Tidak diperlukan untuk backend
 }
 
 // Lazy initialization untuk db

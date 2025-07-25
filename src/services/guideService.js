@@ -1,8 +1,3 @@
-/**
- * Guide Service
- * Service untuk mengelola panduan keselamatan berlayar
- */
-
 const { db } = require("../config/firebase");
 const Guide = require("../models/Guide");
 const GuideSession = require("../models/GuideSession");
@@ -28,11 +23,7 @@ class GuideService {
     return this._sessionsCollection;
   }
 
-  /**
-   * CRUD Operations untuk Guides
-   */
-
-  // Create guide
+  // Membuat panduan baru
   async createGuide(guideData, createdBy = null) {
     try {
       const guide = new Guide({
@@ -56,7 +47,7 @@ class GuideService {
     }
   }
 
-  // Get all guides dengan filter
+  // Mendapatkan semua panduan dengan filter dan pagination
   async getAllGuides(filters = {}) {
     try {
       let query = this.guidesCollection;
@@ -112,7 +103,7 @@ class GuideService {
     }
   }
 
-  // Get guide by ID
+  // Mendapatkan panduan berdasarkan ID
   async getGuideById(guideId) {
     try {
       const doc = await this.guidesCollection.doc(guideId).get();
@@ -127,7 +118,7 @@ class GuideService {
     }
   }
 
-  // Update guide
+  // Memperbarui panduan
   async updateGuide(guideId, updateData) {
     try {
       const existingGuide = await this.getGuideById(guideId);
@@ -155,7 +146,7 @@ class GuideService {
     }
   }
 
-  // Delete guide
+  // Menghapus panduan
   async deleteGuide(guideId) {
     try {
       const guide = await this.getGuideById(guideId);
@@ -171,18 +162,14 @@ class GuideService {
     }
   }
 
-  /**
-   * Guide Session Operations
-   */
-
-  // Create atau update session
+  // Membuat atau memperbarui session panduan
   async createOrUpdateSession(userId, tripInfo) {
     try {
       // Cek apakah ada session aktif
       const existingSession = await this.getActiveSession(userId);
 
       if (existingSession && !existingSession.isExpired()) {
-        // Update existing session
+        // Update session yang tersedia dengan informasi perjalanan baru
         existingSession.trip_info = tripInfo;
         existingSession.status = "form_filling";
         existingSession.updated_at = new Date().toISOString();
@@ -192,7 +179,7 @@ class GuideService {
           .update(existingSession.toFirestore());
         return existingSession;
       } else {
-        // Create new session
+        // Buat session baru
         const session = new GuideSession({
           user_id: userId,
           trip_info: tripInfo,
@@ -215,7 +202,7 @@ class GuideService {
     }
   }
 
-  // Get active session untuk user
+  // Mendapatkan session aktif pengguna
   async getActiveSession(userId) {
     try {
       const snapshot = await this.sessionsCollection
@@ -235,7 +222,7 @@ class GuideService {
     }
   }
 
-  // Get session by ID
+  // Mendapatkan session berdasarkan ID
   async getSessionById(sessionId) {
     try {
       const doc = await this.sessionsCollection.doc(sessionId).get();
@@ -259,7 +246,7 @@ class GuideService {
         throw new Error("Session has expired");
       }
 
-      // Get all active guides
+      // Ambil semua panduan yang aktif
       const allGuides = await this.getAllGuides({ is_active: true });
 
       // Filter guides berdasarkan kondisi perjalanan
@@ -267,21 +254,20 @@ class GuideService {
         guide.matchesConditions(session.trip_info)
       );
 
-      // Sort by priority dan mandatory status
+      // Sorting berdasarkan status mandatory dan prioritas
       matchingGuides.sort((a, b) => {
         if (a.is_mandatory && !b.is_mandatory) return -1;
         if (!a.is_mandatory && b.is_mandatory) return 1;
         return a.priority - b.priority;
       });
 
-      // Update session dengan checklist items
       session.setChecklistItems(matchingGuides);
       await this.sessionsCollection
         .doc(sessionId)
         .update(session.toFirestore());
 
-      // Return checklist format
-      const checklist = matchingGuides.map((guide) => guide.toChecklistItem());
+      // Konversi panduan ke checklist item
+        const checklist = matchingGuides.map((guide) => guide.toChecklistItem());
 
       return {
         session_id: sessionId,
@@ -301,7 +287,7 @@ class GuideService {
     }
   }
 
-  // Update checklist progress
+  // Memperbarui progres checklist
   async updateChecklistProgress(sessionId, guideId, isCompleted) {
     try {
       const session = await this.getSessionById(sessionId);
@@ -327,7 +313,7 @@ class GuideService {
     }
   }
 
-  // Get summary dengan video URLs
+  // Mendapatkan ringkasan session
   async getSummary(sessionId) {
     try {
       const session = await this.getSessionById(sessionId);
@@ -339,7 +325,7 @@ class GuideService {
         throw new Error("Checklist not completed yet");
       }
 
-      // Get all guides yang ada di checklist
+      // Ambil semua panduan yang relevan untuk session ini
       const guideIds = session.checklist_progress.items.map(
         (item) => item.guide_id
       );
@@ -347,7 +333,7 @@ class GuideService {
         guideIds.map((id) => this.getGuideById(id))
       );
 
-      // Create summary items dengan video URLs
+      // Buat item ringkasan untuk setiap panduan
       const summaryItems = guides.map((guide) => {
         const progressItem = session.checklist_progress.items.find(
           (item) => item.guide_id === guide.id
@@ -359,7 +345,7 @@ class GuideService {
         };
       });
 
-      // Sort by completion status dan priority
+      // Sorting berdasarkan status selesai, mandatory, dan prioritas
       summaryItems.sort((a, b) => {
         if (a.is_completed && !b.is_completed) return -1;
         if (!a.is_completed && b.is_completed) return 1;
@@ -379,7 +365,7 @@ class GuideService {
     }
   }
 
-  // Complete session
+  // Menandai session sebagai selesai
   async completeSession(sessionId) {
     try {
       const session = await this.getSessionById(sessionId);
@@ -400,7 +386,7 @@ class GuideService {
     }
   }
 
-  // Get user sessions history
+  // Mendapatkan riwayat session pengguna
   async getUserSessions(userId, filters = {}) {
     try {
       let query = this.sessionsCollection.where("user_id", "==", userId);
@@ -429,11 +415,7 @@ class GuideService {
     }
   }
 
-  /**
-   * Utility Methods
-   */
-
-  // Get statistics
+  // Mendapatkan statistik panduan dan session
   async getStatistics() {
     try {
       const [guidesSnapshot, sessionsSnapshot] = await Promise.all([

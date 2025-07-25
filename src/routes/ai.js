@@ -193,7 +193,7 @@ router.post("/detect-anomalies", authenticateToken, async (req, res) => {
       validHistoricalDays
     );
 
-    // Generate anomaly analysis with sensitivity
+    // Generate analisis anomali cuaca dengan sensitivitas
     const anomalyAnalysis = await geminiService.detectAnomalies(
       currentData,
       historicalData.success ? historicalData.data : null,
@@ -238,7 +238,7 @@ router.post("/detect-anomalies", authenticateToken, async (req, res) => {
   }
 });
 
-// Mendapatkan peringatan dini untuk lokasi tertentu
+// Ambil peringatan dini untuk lokasi tertentu
 router.get("/early-warnings", authenticateToken, async (req, res) => {
   try {
     const {
@@ -253,22 +253,21 @@ router.get("/early-warnings", authenticateToken, async (req, res) => {
       return ApiResponse.badRequest(res, "Latitude dan longitude diperlukan");
     }
 
-    // Validate historical_days (1-92 days max, but recommend max 7 for optimal performance)
+    // Validasi historical_days (1-92 days max, tetapi rekomendasi max 7 untuk kinerja optimal)
     const validHistoricalDays = Math.min(
       Math.max(parseInt(historical_days), 1),
       92
     );
 
-    // Validate alert_threshold
+    // Validasi alert_threshold
     const validThresholds = ["low", "medium", "high"];
     const validThreshold = validThresholds.includes(alert_threshold)
       ? alert_threshold
       : "medium";
 
-    // Generate location string from coordinates
+    // Generate lokasi string dari koordinat
     const locationString = `${latitude}, ${longitude}`;
 
-    // Get current weather data with timezone
     let currentData;
     try {
       currentData = await weatherService.getMarineWeather(latitude, longitude, {
@@ -279,14 +278,14 @@ router.get("/early-warnings", authenticateToken, async (req, res) => {
       return ApiResponse.error(res, "Gagal mengambil data cuaca");
     }
 
-    // Get historical data for comparison with custom days
+    // Ambil data historis cuaca sebagai referensi
     const historicalData = await weatherService.getHistoricalWeather(
       latitude,
       longitude,
       validHistoricalDays
     );
 
-    // Generate anomaly analysis with threshold sensitivity
+    // Generate analisis anomali cuaca dengan sensitivitas
     const anomalyAnalysis = await geminiService.detectAnomalies(
       currentData,
       historicalData.success ? historicalData.data : null,
@@ -294,7 +293,7 @@ router.get("/early-warnings", authenticateToken, async (req, res) => {
       { sensitivity: validThreshold }
     );
 
-    // Filter warnings based on alert_threshold
+    // Filter warning berdasarkan alert_threshold
     let severityFilter = [];
     switch (validThreshold) {
       case "low":

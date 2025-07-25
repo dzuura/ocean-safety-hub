@@ -491,7 +491,7 @@ class SafetyController {
   // Generate grid points dalam radius tertentu
   _generateGridPoints(centerLat, centerLng, radiusKm, gridSize) {
     const points = [];
-    const latRange = radiusKm / 111; // Approximate km to degree conversion
+    const latRange = radiusKm / 111; // 1 derajat = 111 km
     const lngRange = radiusKm / (111 * Math.cos((centerLat * Math.PI) / 180));
 
     for (let i = 0; i < gridSize; i++) {
@@ -614,7 +614,7 @@ class SafetyController {
 
   // Hitung jarak antara dua titik (Haversine formula)
   _calculateDistance(lat1, lng1, lat2, lng2) {
-    const R = 6371; // Earth's radius in km
+    const R = 6371; // Radius bumi dalam km
     const dLat = ((lat2 - lat1) * Math.PI) / 180;
     const dLng = ((lng2 - lng1) * Math.PI) / 180;
     const a =
@@ -624,7 +624,7 @@ class SafetyController {
         Math.sin(dLng / 2) *
         Math.sin(dLng / 2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return Math.round(R * c * 100) / 100; // Round to 2 decimal places
+    return Math.round(R * c * 100) / 100; // Dalam km, dibulatkan ke 2 desimal
   }
 
   // Mendapatkan level keamanan berdasarkan skor

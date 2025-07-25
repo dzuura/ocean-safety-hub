@@ -1,8 +1,4 @@
-/**
- * Community Model
- * Represents a fishing community with members and discussions
- */
-
+// Model untuk komunitas
 class Community {
   constructor(data = {}) {
     this.id = data.id || null;
@@ -15,12 +11,12 @@ class Community {
       region: '' // WIB/WITA/WIT
     };
     this.admin_id = data.admin_id || '';
-    this.moderators = data.moderators || []; // Array of user IDs
-    this.members = data.members || []; // Array of user IDs
+    this.moderators = data.moderators || []; // Array user ID
+    this.members = data.members || []; // Array user ID
     this.member_count = data.member_count || 0;
     this.is_public = data.is_public !== undefined ? data.is_public : true;
     this.join_approval_required = data.join_approval_required !== undefined ? data.join_approval_required : false;
-    this.tags = data.tags || []; // e.g., ['nelayan', 'jakarta', 'kapal_besar']
+    this.tags = data.tags || [];
     this.avatar_url = data.avatar_url || '';
     this.banner_url = data.banner_url || '';
     this.rules = data.rules || [];
@@ -45,9 +41,7 @@ class Community {
     this.status = data.status || 'active'; // active, suspended, archived
   }
 
-  /**
-   * Validate community data
-   */
+  // Validasi data komunitas
   validate() {
     const errors = {};
 
@@ -73,9 +67,7 @@ class Community {
     };
   }
 
-  /**
-   * Convert to Firestore document
-   */
+  // Konversi ke format Firestore
   toFirestore() {
     const { id, ...data } = this;
     return {
@@ -84,9 +76,7 @@ class Community {
     };
   }
 
-  /**
-   * Create from Firestore document
-   */
+  // Membuat objek Community dari data Firestore
   static fromFirestore(doc) {
     return new Community({
       id: doc.id,
@@ -94,30 +84,22 @@ class Community {
     });
   }
 
-  /**
-   * Check if user is admin
-   */
+  // Cek apakah user adalah admin
   isAdmin(userId) {
     return this.admin_id === userId;
   }
 
-  /**
-   * Check if user is moderator
-   */
+  // Cek apakah user adalah moderator
   isModerator(userId) {
     return this.moderators.includes(userId) || this.isAdmin(userId);
   }
 
-  /**
-   * Check if user is member
-   */
+  // Cek apakah user adalah anggota
   isMember(userId) {
     return this.members.includes(userId) || this.isModerator(userId);
   }
 
-  /**
-   * Add member to community
-   */
+  // Menambahkan anggota
   addMember(userId) {
     if (!this.members.includes(userId)) {
       this.members.push(userId);
@@ -126,9 +108,7 @@ class Community {
     }
   }
 
-  /**
-   * Remove member from community
-   */
+  // Menghapus anggota
   removeMember(userId) {
     const index = this.members.indexOf(userId);
     if (index > -1) {
@@ -138,9 +118,7 @@ class Community {
     }
   }
 
-  /**
-   * Add moderator
-   */
+  // Menambahkan moderator
   addModerator(userId) {
     if (!this.moderators.includes(userId) && userId !== this.admin_id) {
       this.moderators.push(userId);
@@ -148,9 +126,7 @@ class Community {
     }
   }
 
-  /**
-   * Remove moderator
-   */
+  // Menghapus moderator
   removeModerator(userId) {
     const index = this.moderators.indexOf(userId);
     if (index > -1) {
@@ -159,9 +135,7 @@ class Community {
     }
   }
 
-  /**
-   * Update statistics
-   */
+  // Memperbarui statistik
   updateStatistics(stats) {
     this.statistics = {
       ...this.statistics,

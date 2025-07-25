@@ -22,9 +22,7 @@ class ReportService {
     return this._votesCollection;
   }
 
-  /**
-   * Create a new report
-   */
+  // Membuat laporan baru
   async createReport(reportData) {
     try {
       const report = new Report(reportData);
@@ -36,7 +34,7 @@ class ReportService {
         );
       }
 
-      // Set expiration time if not provided (default 24 hours)
+      // Mengatuskan waktu kadaluarsa jika tidak disediakan
       if (!report.valid_until) {
         const expirationTime = new Date();
         expirationTime.setHours(expirationTime.getHours() + 24);
@@ -54,9 +52,7 @@ class ReportService {
     }
   }
 
-  /**
-   * Get report by ID
-   */
+  // Mengambil laporan berdasarkan ID
   async getReportById(reportId) {
     try {
       const doc = await this.collection.doc(reportId).get();
@@ -67,7 +63,7 @@ class ReportService {
 
       const report = Report.fromFirestore(doc);
 
-      // Increment view count
+      // Menambahkan view count
       report.incrementViewCount();
       await this.collection.doc(reportId).update({
         view_count: report.view_count,
@@ -81,9 +77,7 @@ class ReportService {
     }
   }
 
-  /**
-   * Update report
-   */
+  // Memperbarui laporan
   async updateReport(reportId, updateData, userId) {
     try {
       const report = await this.getReportById(reportId);
@@ -115,9 +109,7 @@ class ReportService {
     }
   }
 
-  /**
-   * Delete report
-   */
+  // Menghapus laporan
   async deleteReport(reportId, userId, userRole = "member") {
     try {
       const report = await this.getReportById(reportId);
@@ -144,9 +136,7 @@ class ReportService {
     }
   }
 
-  /**
-   * Search reports
-   */
+  // Mencari laporan dengan berbagai filter
   async searchReports(filters = {}) {
     try {
       let query = this.collection.where("status", "==", "active");
@@ -176,18 +166,17 @@ class ReportService {
         query = query.where("tags", "array-contains-any", filters.tags);
       }
 
-      // Location-based filtering (requires geo queries - simplified version)
+      // Filter berdasarkan lokasi 
       if (filters.near_location && filters.radius_km) {
-        // This is a simplified version. For production, use GeoFirestore or similar
         const { latitude, longitude } = filters.near_location;
-        const radiusDegrees = filters.radius_km / 111; // Rough conversion
+        const radiusDegrees = filters.radius_km / 111; // konversi kasar
 
         query = query
           .where("location.latitude", ">=", latitude - radiusDegrees)
           .where("location.latitude", "<=", latitude + radiusDegrees);
       }
 
-      // Apply ordering
+      // Menerapkan pengurutan
       if (filters.sort_by === "votes") {
         query = query.orderBy("voting.total_votes", "desc");
       } else if (filters.sort_by === "urgency") {
@@ -198,7 +187,7 @@ class ReportService {
         query = query.orderBy("created_at", "desc");
       }
 
-      // Apply pagination
+      // Menerapkan pagination
       if (filters.limit) {
         query = query.limit(filters.limit);
       }
@@ -215,7 +204,7 @@ class ReportService {
 
       snapshot.forEach((doc) => {
         const report = Report.fromFirestore(doc);
-        // Only include valid (non-expired) reports unless specifically requested
+        // Hanya termasuk laporan yang belum kadaluarsa, kecuali jika include_expired ditentukan
         if (filters.include_expired || report.isValid()) {
           reports.push(report);
         }
@@ -228,9 +217,7 @@ class ReportService {
     }
   }
 
-  /**
-   * Vote on report
-   */
+  // Memberikan vote pada laporan
   async voteOnReport(reportId, userId, voteType, accuracyRating = null) {
     try {
       const report = await this.getReportById(reportId);
@@ -243,13 +230,13 @@ class ReportService {
         throw new Error("Cannot vote on your own report");
       }
 
-      // Check if user already voted
+      // Cek apakah pengguna sudah vote sebelumnya
       const existingVoteSnapshot = await this.votesCollection
         .where("report_id", "==", reportId)
         .where("user_id", "==", userId)
         .get();
 
-      // Remove existing vote if any
+      // Hapus vote sebelumnya jika ada
       if (!existingVoteSnapshot.empty) {
         const batch = db.batch();
         existingVoteSnapshot.forEach((doc) => {
@@ -257,15 +244,14 @@ class ReportService {
         });
         await batch.commit();
 
-        // Remove vote from report
+        // Hapus vote dari laporan
         report.removeVote(userId);
       }
 
-      // Add new vote if not removing
+      // Menambahkan vote baru jika ada
       if (voteType) {
         report.addVote(userId, voteType, accuracyRating);
 
-        // Create vote record
         await this.votesCollection.add({
           report_id: reportId,
           user_id: userId,
@@ -275,7 +261,7 @@ class ReportService {
         });
       }
 
-      // Update report
+      // Update laporan
       await this.collection.doc(reportId).update(report.toFirestore());
 
       console.log(
@@ -288,9 +274,7 @@ class ReportService {
     }
   }
 
-  /**
-   * Verify report
-   */
+  // Verifikasi laporan
   async verifyReport(reportId, verifierId, status, notes = "") {
     try {
       const report = await this.getReportById(reportId);
@@ -310,9 +294,7 @@ class ReportService {
     }
   }
 
-  /**
-   * Add comment to report
-   */
+  // Menambahkan komentar pada laporan
   async addComment(reportId, commentData) {
     try {
       const report = await this.getReportById(reportId);
@@ -339,12 +321,9 @@ class ReportService {
     }
   }
 
-  /**
-   * Get reports by location
-   */
+  // Mengambil laporan berdasarkan lokasi
   async getReportsByLocation(latitude, longitude, radiusKm = 10, limit = 20) {
     try {
-      // Simplified location query - for production use GeoFirestore
       const radiusDegrees = radiusKm / 111;
 
       const snapshot = await this.collection
@@ -359,7 +338,7 @@ class ReportService {
       snapshot.forEach((doc) => {
         const report = Report.fromFirestore(doc);
 
-        // Additional longitude filtering and distance calculation
+        // Filter berdasarkan longitude tambahan
         const lonDiff = Math.abs(report.location.longitude - longitude);
         if (lonDiff <= radiusDegrees && report.isValid()) {
           reports.push(report);
@@ -373,9 +352,7 @@ class ReportService {
     }
   }
 
-  /**
-   * Get report statistics for community
-   */
+  // Mendapatkan statistik laporan komunitas
   async getCommunityReportStats(communityId) {
     try {
       const snapshot = await this.collection

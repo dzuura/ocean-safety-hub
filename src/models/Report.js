@@ -1,8 +1,4 @@
-/**
- * Report Model
- * Represents a marine condition report from community members
- */
-
+// Model untuk laporan
 class Report {
   constructor(data = {}) {
     this.id = data.id || null;
@@ -66,9 +62,7 @@ class Report {
     this.status = data.status || 'active'; // active/archived/deleted
   }
 
-  /**
-   * Validate report data
-   */
+  // Validasi laporan sebelum disimpan
   validate() {
     const errors = {};
 
@@ -100,7 +94,7 @@ class Report {
       errors.longitude = 'Longitude harus antara -180 dan 180';
     }
 
-    // Validate conditions if provided
+    // Validasi kondisi cuaca
     if (this.conditions.wave_height !== null && (this.conditions.wave_height < 0 || this.conditions.wave_height > 30)) {
       errors.wave_height = 'Tinggi gelombang harus antara 0-30 meter';
     }
@@ -115,9 +109,7 @@ class Report {
     };
   }
 
-  /**
-   * Convert to Firestore document
-   */
+  // Konversi ke format Firestore
   toFirestore() {
     const { id, ...data } = this;
     return {
@@ -126,9 +118,7 @@ class Report {
     };
   }
 
-  /**
-   * Create from Firestore document
-   */
+  // Konversi dari Firestore document
   static fromFirestore(doc) {
     return new Report({
       id: doc.id,
@@ -136,26 +126,20 @@ class Report {
     });
   }
 
-  /**
-   * Check if report is still valid (not expired)
-   */
+  // Cek apakah laporan masih berlaku
   isValid() {
     if (!this.valid_until) return true;
     return new Date(this.valid_until) > new Date();
   }
 
-  /**
-   * Check if user can edit this report
-   */
+  // Cek apakah pengguna dapat mengedit laporan
   canEdit(userId, userRole = 'member') {
     return this.author_id === userId || userRole === 'moderator' || userRole === 'admin';
   }
 
-  /**
-   * Add vote to report
-   */
+  // Cek apakah laporan dapat diverifikasi
   addVote(userId, voteType, accuracyRating = null) {
-    // Remove existing vote if any
+    // Menghapus vote yang ada jika tersedia
     this.removeVote(userId);
 
     // Add new vote
@@ -173,8 +157,8 @@ class Report {
     });
 
     this.voting.total_votes = this.voting.upvotes + this.voting.downvotes;
-    
-    // Update accuracy rating
+
+    // Update akurasi rating
     if (accuracyRating) {
       this.updateAccuracyRating();
     }
@@ -182,9 +166,7 @@ class Report {
     this.updated_at = new Date().toISOString();
   }
 
-  /**
-   * Remove vote from report
-   */
+  // Hapus vote pengguna
   removeVote(userId) {
     const existingVoteIndex = this.voting.voters.findIndex(v => v.user_id === userId);
     if (existingVoteIndex > -1) {
@@ -200,9 +182,7 @@ class Report {
     }
   }
 
-  /**
-   * Update accuracy rating based on votes
-   */
+  // Update akurasi rating berdasarkan voting
   updateAccuracyRating() {
     const ratingsWithValues = this.voting.voters.filter(v => v.accuracy_rating);
     if (ratingsWithValues.length > 0) {
@@ -211,9 +191,7 @@ class Report {
     }
   }
 
-  /**
-   * Add comment to report
-   */
+  // Tambah komentar pada laporan
   addComment(comment) {
     this.comments.push({
       id: Date.now().toString(),
@@ -223,9 +201,7 @@ class Report {
     this.updated_at = new Date().toISOString();
   }
 
-  /**
-   * Verify report
-   */
+  // Update status verifikasi laporan
   verify(verifierId, status, notes = '') {
     this.verification = {
       status,
@@ -237,9 +213,7 @@ class Report {
     this.updated_at = new Date().toISOString();
   }
 
-  /**
-   * Calculate confidence score based on various factors
-   */
+  // Hitung skor kepercayaan berdasarkan voting dan media
   calculateConfidenceScore() {
     let score = 50; // Base score
 
@@ -265,17 +239,13 @@ class Report {
     return Math.max(0, Math.min(100, Math.round(score)));
   }
 
-  /**
-   * Increment view count
-   */
+  // Tambah jumlah view laporan
   incrementViewCount() {
     this.view_count++;
     this.updated_at = new Date().toISOString();
   }
 
-  /**
-   * Increment share count
-   */
+  // Tambah jumlah share laporan
   incrementShareCount() {
     this.share_count++;
     this.updated_at = new Date().toISOString();

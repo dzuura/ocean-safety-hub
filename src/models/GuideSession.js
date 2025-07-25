@@ -1,8 +1,4 @@
-/**
- * GuideSession Model
- * Model untuk session panduan pengguna (form perjalanan + checklist progress)
- */
-
+// Model untuk sesi panduan
 class GuideSession {
   constructor(data = {}) {
     this.id = data.id || null;
@@ -42,18 +38,14 @@ class GuideSession {
     this.expires_at = data.expires_at || this.calculateExpiryTime();
   }
 
-  /**
-   * Hitung waktu kedaluwarsa session (24 jam dari dibuat)
-   */
+  // Hitung waktu kedaluwarsa session (24 jam dari dibuat)
   calculateExpiryTime() {
     const now = new Date();
     now.setHours(now.getHours() + 24);
     return now.toISOString();
   }
 
-  /**
-   * Validasi informasi perjalanan
-   */
+  // Validasi informasi perjalanan
   validateTripInfo() {
     const errors = {};
     const { trip_info } = this;
@@ -96,9 +88,7 @@ class GuideSession {
     };
   }
 
-  /**
-   * Update progress checklist
-   */
+  // Update progress checklist
   updateChecklistProgress(guideId, isCompleted) {
     const existingIndex = this.checklist_progress.items.findIndex(item => item.guide_id === guideId);
     
@@ -117,9 +107,7 @@ class GuideSession {
     this.updated_at = new Date().toISOString();
   }
 
-  /**
-   * Hitung ulang progress checklist
-   */
+  // Menghitung ulang progress checklist
   recalculateProgress() {
     const completedItems = this.checklist_progress.items.filter(item => item.is_completed).length;
     this.checklist_progress.completed_items = completedItems;
@@ -138,9 +126,7 @@ class GuideSession {
     }
   }
 
-  /**
-   * Set checklist items untuk session ini
-   */
+  // Set checklist items untuk session ini
   setChecklistItems(guides) {
     this.checklist_progress.total_items = guides.length;
     this.checklist_progress.mandatory_items = guides.filter(guide => guide.is_mandatory).length;
@@ -159,9 +145,7 @@ class GuideSession {
     this.updated_at = new Date().toISOString();
   }
 
-  /**
-   * Tandai session sebagai selesai
-   */
+  // Menandai session sebagai selesai
   markAsCompleted() {
     this.status = 'completed';
     this.completed_at = new Date().toISOString();
@@ -169,24 +153,18 @@ class GuideSession {
     this.is_active = false;
   }
 
-  /**
-   * Cek apakah session sudah kedaluwarsa
-   */
+  // Cek apakah session sudah expired
   isExpired() {
     return new Date() > new Date(this.expires_at);
   }
 
-  /**
-   * Cek apakah semua item mandatory sudah selesai
-   */
+  // Cek apakah semua item mandatory sudah selesai
   isMandatoryCompleted() {
     if (this.checklist_progress.mandatory_items === 0) return true;
     return this.checklist_progress.completed_mandatory >= this.checklist_progress.mandatory_items;
   }
 
-  /**
-   * Get summary statistik
-   */
+  // Mendapatkan rangkuman
   getSummary() {
     return {
       trip_info: this.trip_info,
@@ -203,18 +181,14 @@ class GuideSession {
     };
   }
 
-  /**
-   * Hitung durasi yang dihabiskan untuk checklist
-   */
+  // Menghitung durasi yang habis
   getDurationSpent() {
     const start = new Date(this.created_at);
     const end = this.completed_at ? new Date(this.completed_at) : new Date();
     return Math.round((end - start) / (1000 * 60)); // dalam menit
   }
 
-  /**
-   * Convert ke format untuk database
-   */
+  // Konversi ke format Firestore
   toFirestore() {
     const data = { ...this };
     delete data.id;
@@ -222,9 +196,7 @@ class GuideSession {
     return data;
   }
 
-  /**
-   * Convert dari format database
-   */
+  // Konversi dari format Firestore
   static fromFirestore(doc) {
     const data = doc.data();
     return new GuideSession({
@@ -233,9 +205,7 @@ class GuideSession {
     });
   }
 
-  /**
-   * Convert ke format API response
-   */
+  // Konversi ke format JSON
   toJSON() {
     return {
       id: this.id,

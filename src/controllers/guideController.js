@@ -1,16 +1,8 @@
-/**
- * Guide Controller
- * Controller untuk mengelola panduan keselamatan berlayar
- */
-
 const guideService = require("../services/guideService");
 
 class GuideController {
-  /**
-   * CRUD Operations untuk Guides (Admin only)
-   */
 
-  // Create guide
+  // Membuat guide baru
   async createGuide(req, res) {
     try {
       const guideData = req.body;
@@ -33,7 +25,7 @@ class GuideController {
     }
   }
 
-  // Get all guides
+  // Mendapatkan semua guide
   async getAllGuides(req, res) {
     try {
       const filters = {
@@ -72,7 +64,7 @@ class GuideController {
     }
   }
 
-  // Get guide by ID
+  // Mendapatkan detail guide
   async getGuideById(req, res) {
     try {
       const { guideId } = req.params;
@@ -117,7 +109,7 @@ class GuideController {
     }
   }
 
-  // Delete guide
+  // Hapus guide
   async deleteGuide(req, res) {
     try {
       const { guideId } = req.params;
@@ -139,11 +131,7 @@ class GuideController {
     }
   }
 
-  /**
-   * Guide Session Operations (User)
-   */
-
-  // Start new session dengan trip info
+  // Membuat atau memperbarui session berdasarkan trip info
   async startSession(req, res) {
     try {
       const userId = req.user.uid;
@@ -169,7 +157,7 @@ class GuideController {
     }
   }
 
-  // Get active session
+  // Mendapatkan session aktif pengguna
   async getActiveSession(req, res) {
     try {
       const userId = req.user.uid;
@@ -203,7 +191,7 @@ class GuideController {
       const { sessionId } = req.params;
       const userId = req.user.uid;
 
-      // Verify session belongs to user
+      // Verifikasi session milik pengguna
       const session = await guideService.getSessionById(sessionId);
       if (session.user_id !== userId) {
         return res.status(403).json({
@@ -235,14 +223,14 @@ class GuideController {
     }
   }
 
-  // Update checklist item progress
+  // Update progress checklist
   async updateChecklistProgress(req, res) {
     try {
       const { sessionId, guideId } = req.params;
       const { is_completed } = req.body;
       const userId = req.user.uid;
 
-      // Verify session belongs to user
+      // Verifikasi session milik pengguna
       const session = await guideService.getSessionById(sessionId);
       if (session.user_id !== userId) {
         return res.status(403).json({
@@ -278,13 +266,13 @@ class GuideController {
     }
   }
 
-  // Get summary dengan video URLs
+  // Mendapatkan rangkuman
   async getSummary(req, res) {
     try {
       const { sessionId } = req.params;
       const userId = req.user.uid;
 
-      // Verify session belongs to user
+      // Verifikasi session milik pengguna
       const session = await guideService.getSessionById(sessionId);
       if (session.user_id !== userId) {
         return res.status(403).json({
@@ -316,13 +304,13 @@ class GuideController {
     }
   }
 
-  // Complete session
+  // Menyelesaikan session
   async completeSession(req, res) {
     try {
       const { sessionId } = req.params;
       const userId = req.user.uid;
 
-      // Verify session belongs to user
+      // Verifikasi session milik pengguna
       const session = await guideService.getSessionById(sessionId);
       if (session.user_id !== userId) {
         return res.status(403).json({
@@ -350,7 +338,7 @@ class GuideController {
     }
   }
 
-  // Get user sessions history
+  // Mendapatkan riwayat session pengguna
   async getUserSessions(req, res) {
     try {
       const userId = req.user.uid;
@@ -375,11 +363,7 @@ class GuideController {
     }
   }
 
-  /**
-   * Statistics & Utility
-   */
-
-  // Get statistics (Admin only)
+  // Mendapatkan statistik panduan
   async getStatistics(req, res) {
     try {
       const stats = await guideService.getStatistics();
@@ -398,7 +382,7 @@ class GuideController {
     }
   }
 
-  // Get session by ID (untuk debugging/admin)
+  // Mendapatkan detail session
   async getSessionById(req, res) {
     try {
       const { sessionId } = req.params;

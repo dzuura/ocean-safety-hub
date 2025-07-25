@@ -1,10 +1,4 @@
-/**
- * Validation middleware for various API endpoints
- */
-
-/**
- * Validate weather parameters
- */
+// Validasi parameter untuk mendapatkan data cuaca
 const validateWeatherParams = (req, res, next) => {
   const { latitude, longitude } = req.query;
   const errors = {};
@@ -39,9 +33,7 @@ const validateWeatherParams = (req, res, next) => {
   next();
 };
 
-/**
- * Validate AI parameters
- */
+// Validasi parameter untuk AI
 const validateAIParams = (req, res, next) => {
   const { latitude, longitude } = req.body;
   const errors = {};
@@ -76,9 +68,7 @@ const validateAIParams = (req, res, next) => {
   next();
 };
 
-/**
- * Validate safety parameters
- */
+// Validasi parameter untuk analisis keamanan
 const validateSafetyParams = (req, res, next) => {
   const { latitude, longitude, boat_type } = req.query;
   const errors = {};
@@ -120,19 +110,17 @@ const validateSafetyParams = (req, res, next) => {
   next();
 };
 
-/**
- * Validate community data
- */
+// Validasi data komunitas
 const validateCommunityData = (req, res, next) => {
   const { name, description, location } = req.body;
   const errors = {};
 
-  // Validate name
+  // Validasi nama
   if (!name || typeof name !== "string" || name.trim().length < 3) {
     errors.name = "Nama komunitas minimal 3 karakter";
   }
 
-  // Validate description
+  // Validasi deskripsi
   if (
     !description ||
     typeof description !== "string" ||
@@ -141,7 +129,7 @@ const validateCommunityData = (req, res, next) => {
     errors.description = "Deskripsi komunitas minimal 10 karakter";
   }
 
-  // Validate location
+  // Validasi lokasi
   if (!location || typeof location !== "object") {
     errors.location = "Data lokasi diperlukan";
   } else {
@@ -161,12 +149,12 @@ const validateCommunityData = (req, res, next) => {
     }
   }
 
-  // Validate tags if provided
+  // Validasi tag jika disediakan
   if (req.body.tags && !Array.isArray(req.body.tags)) {
     errors.tags = "Tags harus berupa array";
   }
 
-  // Validate rules if provided
+  // Validasi aturan jika disediakan
   if (req.body.rules && !Array.isArray(req.body.rules)) {
     errors.rules = "Rules harus berupa array";
   }
@@ -183,9 +171,7 @@ const validateCommunityData = (req, res, next) => {
   next();
 };
 
-/**
- * Validate membership data
- */
+// Validasi data anggota komunitas
 const validateMembershipData = (req, res, next) => {
   const { userId } = req.body;
   const errors = {};
@@ -206,19 +192,17 @@ const validateMembershipData = (req, res, next) => {
   next();
 };
 
-/**
- * Validate report data
- */
+// Validasi data laporan
 const validateReportData = (req, res, next) => {
   const { title, description, location, community_id } = req.body;
   const errors = {};
 
-  // Validate title
+  // Validasi judul
   if (!title || typeof title !== "string" || title.trim().length < 5) {
     errors.title = "Judul laporan minimal 5 karakter";
   }
 
-  // Validate description
+  // Validasi deskripsi
   if (
     !description ||
     typeof description !== "string" ||
@@ -227,12 +211,12 @@ const validateReportData = (req, res, next) => {
     errors.description = "Deskripsi laporan minimal 20 karakter";
   }
 
-  // Validate community_id
+  // Validasi id komunitas
   if (!community_id || typeof community_id !== "string") {
     errors.community_id = "Community ID diperlukan";
   }
 
-  // Validate location
+  // Validasi lokasi
   if (!location || typeof location !== "object") {
     errors.location = "Data lokasi diperlukan";
   } else {
@@ -252,7 +236,7 @@ const validateReportData = (req, res, next) => {
     }
   }
 
-  // Validate urgency_level if provided
+  // Validasi level urgensi jika disediakan
   if (req.body.urgency_level) {
     const validLevels = ["low", "normal", "high", "critical"];
     if (!validLevels.includes(req.body.urgency_level)) {
@@ -260,7 +244,7 @@ const validateReportData = (req, res, next) => {
     }
   }
 
-  // Validate conditions if provided
+  // Validasi kondisi cuaca jika disediakan
   if (req.body.conditions) {
     const { wave_height, wind_speed, visibility } = req.body.conditions;
 
@@ -298,9 +282,7 @@ const validateReportData = (req, res, next) => {
   next();
 };
 
-/**
- * Validate vote data
- */
+// Validasi data vote
 const validateVoteData = (req, res, next) => {
   const { vote_type, accuracy_rating } = req.body;
   const errors = {};
@@ -330,9 +312,7 @@ const validateVoteData = (req, res, next) => {
   next();
 };
 
-/**
- * Validate comment data
- */
+// Validasi data komentar
 const validateCommentData = (req, res, next) => {
   const { content } = req.body;
   const errors = {};
@@ -353,9 +333,7 @@ const validateCommentData = (req, res, next) => {
   next();
 };
 
-/**
- * Validate guide data
- */
+// Validasi data panduan
 const validateGuideData = (req, res, next) => {
   const {
     title,
@@ -419,9 +397,7 @@ const validateGuideData = (req, res, next) => {
   next();
 };
 
-/**
- * Validate trip information
- */
+// Validasi informasi perjalanan
 const validateTripInfo = (req, res, next) => {
   const { trip_purpose, duration_minutes, passenger_count, boat_type } =
     req.body;
@@ -477,9 +453,7 @@ const validateTripInfo = (req, res, next) => {
   next();
 };
 
-/**
- * Validate checklist update
- */
+// Validasi update checklist
 const validateChecklistUpdate = (req, res, next) => {
   const { is_completed } = req.body;
   const errors = {};

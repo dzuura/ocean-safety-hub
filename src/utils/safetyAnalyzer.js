@@ -1,20 +1,12 @@
 const config = require('../config');
 const Logger = require('./logger');
 
-/**
- * Safety Analyzer Utility
- * Menganalisis kondisi keamanan berlayar berdasarkan data cuaca
- */
 class SafetyAnalyzer {
   constructor() {
     this.thresholds = config.safety;
   }
 
-  /**
-   * Menganalisis tingkat keamanan berdasarkan tinggi gelombang
-   * @param {number} waveHeight - Tinggi gelombang dalam meter
-   * @returns {Object} Analisis keamanan gelombang
-   */
+  // Analisis tinggi gelombang dalam meter
   analyzeWaveHeight(waveHeight) {
     if (waveHeight <= this.thresholds.waveHeight.safe) {
       return {
@@ -47,11 +39,7 @@ class SafetyAnalyzer {
     }
   }
 
-  /**
-   * Menganalisis tingkat keamanan berdasarkan kecepatan angin
-   * @param {number} windSpeed - Kecepatan angin dalam km/h
-   * @returns {Object} Analisis keamanan angin
-   */
+  // Analisis kecepatan angin dalam km/jam
   analyzeWindSpeed(windSpeed) {
     if (windSpeed <= this.thresholds.windSpeed.safe) {
       return {
@@ -84,11 +72,7 @@ class SafetyAnalyzer {
     }
   }
 
-  /**
-   * Menganalisis kondisi cuaca berdasarkan weather code
-   * @param {number} weatherCode - Kode cuaca dari Open Meteo
-   * @returns {Object} Analisis kondisi cuaca
-   */
+  // Analisis kondisi cuaca berdasarkan kode cuaca
   analyzeWeatherCode(weatherCode) {
     // Weather codes berdasarkan WMO standard
     if (weatherCode <= 3) {
@@ -129,11 +113,7 @@ class SafetyAnalyzer {
     }
   }
 
-  /**
-   * Menganalisis keamanan keseluruhan berdasarkan semua parameter
-   * @param {Object} weatherData - Data cuaca lengkap
-   * @returns {Object} Analisis keamanan keseluruhan
-   */
+  // Analisis keamanan keseluruhan berdasarkan data cuaca
   analyzeOverallSafety(weatherData) {
     try {
       const analyses = [];
@@ -209,10 +189,7 @@ class SafetyAnalyzer {
     }
   }
 
-  /**
-   * Mendapatkan skor numerik berdasarkan level
-   * @private
-   */
+  // Mendapatkan skor berdasarkan level
   _getLevelScore(level) {
     const scores = {
       safe: 1,
@@ -223,10 +200,7 @@ class SafetyAnalyzer {
     return scores[level] || 0;
   }
 
-  /**
-   * Mendapatkan level keseluruhan berdasarkan skor rata-rata
-   * @private
-   */
+  // Mendapatkan level keseluruhan berdasarkan skor rata-rata
   _getOverallLevel(averageScore) {
     if (averageScore <= 1.5) return 'safe';
     if (averageScore <= 2.5) return 'moderate';
@@ -234,10 +208,7 @@ class SafetyAnalyzer {
     return 'critical';
   }
 
-  /**
-   * Mendapatkan analisis keseluruhan berdasarkan level
-   * @private
-   */
+  // Mendapatkan analisis keseluruhan berdasarkan level
   _getOverallAnalysis(level) {
     const analyses = {
       safe: {

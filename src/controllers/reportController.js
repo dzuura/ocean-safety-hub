@@ -2,9 +2,8 @@ const reportService = require("../services/reportService");
 const communityService = require("../services/communityService");
 
 class ReportController {
-  /**
-   * Create a new report
-   */
+  
+  // Membuat laporan baru
   createReport = async (req, res) => {
     try {
       const {
@@ -23,7 +22,7 @@ class ReportController {
       const userId = req.user.uid;
       const userName = req.user.name || req.user.email;
 
-      // Verify user is member of the community
+      // Verifikasi pengguna adalah anggota komunitas
       const community = await communityService.getCommunityById(community_id);
       if (!community) {
         return res.status(404).json({
@@ -74,9 +73,7 @@ class ReportController {
     }
   };
 
-  /**
-   * Get report by ID
-   */
+  // Mendapatkan detail laporan
   getReport = async (req, res) => {
     try {
       const { reportId } = req.params;
@@ -121,9 +118,8 @@ class ReportController {
     }
   };
 
-  /**
-   * Update report
-   */
+  
+  // Update laporan
   updateReport = async (req, res) => {
     try {
       const { reportId } = req.params;
@@ -158,15 +154,12 @@ class ReportController {
     }
   };
 
-  /**
-   * Delete report
-   */
+  // Hapus laporan
   deleteReport = async (req, res) => {
     try {
       const { reportId } = req.params;
       const userId = req.user.uid;
 
-      // Get user role in community
       const report = await reportService.getReportById(reportId);
       if (!report) {
         return res.status(404).json({
@@ -206,9 +199,7 @@ class ReportController {
     }
   };
 
-  /**
-   * Search reports
-   */
+  // Cari laporan
   searchReports = async (req, res) => {
     try {
       const {
@@ -269,9 +260,7 @@ class ReportController {
     }
   };
 
-  /**
-   * Vote on report
-   */
+  // Vote laporan
   voteOnReport = async (req, res) => {
     try {
       const { reportId } = req.params;
@@ -330,9 +319,7 @@ class ReportController {
     }
   };
 
-  /**
-   * Verify report
-   */
+  // Verifikasi laporan
   verifyReport = async (req, res) => {
     try {
       const { reportId } = req.params;
@@ -402,9 +389,7 @@ class ReportController {
     }
   };
 
-  /**
-   * Add comment to report
-   */
+  // Tambah komentar
   addComment = async (req, res) => {
     try {
       const { reportId } = req.params;
@@ -449,9 +434,7 @@ class ReportController {
     }
   };
 
-  /**
-   * Get reports by location
-   */
+  // Mendapatkan laporan berdasarkan lokasi
   getReportsByLocation = async (req, res) => {
     try {
       const { latitude, longitude, radius_km = 10, limit = 20 } = req.query;
@@ -504,9 +487,7 @@ class ReportController {
     }
   };
 
-  /**
-   * Get community report statistics
-   */
+  // Mendapatkan statistik laporan komunitas
   getCommunityReportStats = async (req, res) => {
     try {
       const { communityId } = req.params;
@@ -552,9 +533,7 @@ class ReportController {
     }
   };
 
-  /**
-   * Helper method to get user role in community
-   */
+  // Mendapatkan role pengguna
   getUserRole(community, userId) {
     if (community.isAdmin(userId)) return "admin";
     if (community.isModerator(userId)) return "moderator";

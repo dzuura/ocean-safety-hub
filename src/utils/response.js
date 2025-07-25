@@ -1,10 +1,6 @@
-/**
- * Standardized API response utilities
- */
 class ApiResponse {
-  /**
-   * Success response
-   */
+  
+  // Response sukses
   static success(res, data, message = "Success", statusCode = 200) {
     return res.status(statusCode).json({
       success: true,
@@ -14,9 +10,7 @@ class ApiResponse {
     });
   }
 
-  /**
-   * Error response
-   */
+  // Response error
   static error(
     res,
     message = "Internal Server Error",
@@ -31,9 +25,7 @@ class ApiResponse {
     });
   }
 
-  /**
-   * Validation error response
-   */
+  // Response error validasi
   static validationError(res, errors, message = "Validation Error") {
     return res.status(400).json({
       success: false,
@@ -43,9 +35,7 @@ class ApiResponse {
     });
   }
 
-  /**
-   * Not found response
-   */
+  // Response error not found
   static notFound(res, message = "Resource not found") {
     return res.status(404).json({
       success: false,
@@ -54,9 +44,7 @@ class ApiResponse {
     });
   }
 
-  /**
-   * Unauthorized response
-   */
+  // Response error unauthorized
   static unauthorized(res, message = "Unauthorized access") {
     return res.status(401).json({
       success: false,
@@ -65,9 +53,7 @@ class ApiResponse {
     });
   }
 
-  /**
-   * Forbidden response
-   */
+  // Response error forbidden
   static forbidden(res, message = "Access forbidden") {
     return res.status(403).json({
       success: false,
@@ -76,9 +62,7 @@ class ApiResponse {
     });
   }
 
-  /**
-   * Bad request response
-   */
+  // Response error bad request
   static badRequest(res, message = "Bad request") {
     return res.status(400).json({
       success: false,

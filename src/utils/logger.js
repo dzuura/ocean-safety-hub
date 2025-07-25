@@ -1,8 +1,6 @@
 const config = require('../config');
 
-/**
- * Simple logger utility
- */
+// Logger untuk mencatat informasi, error, dan peringatan
 class Logger {
   static info(message, data = null) {
     const timestamp = new Date().toISOString();

@@ -40,16 +40,16 @@ const config = {
 
   // Rate Limiting
   rateLimit: {
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 menit
     maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
   },
 
   // Cache Configuration
   cache: {
-    ttlSeconds: parseInt(process.env.CACHE_TTL_SECONDS) || 300, // 5 minutes
+    ttlSeconds: parseInt(process.env.CACHE_TTL_SECONDS) || 300, // 5 menit
   },
 
-  // Notification Settings
+  // Notification
   notifications: {
     checkIntervalMinutes:
       parseInt(process.env.NOTIFICATION_CHECK_INTERVAL_MINUTES) || 30,
@@ -58,14 +58,14 @@ const config = {
   // Safety Thresholds
   safety: {
     waveHeight: {
-      safe: 1.5, // meters
-      moderate: 3.0, // meters
-      dangerous: 5.0, // meters
+      safe: 1.5, // meter
+      moderate: 3.0, // meter
+      dangerous: 5.0, // meter
     },
     windSpeed: {
-      safe: 15, // km/h
-      moderate: 30, // km/h
-      dangerous: 50, // km/h
+      safe: 15, // km/jam
+      moderate: 30, // km/jam
+      dangerous: 50, // km/jam
     },
   },
 };

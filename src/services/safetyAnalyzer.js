@@ -30,24 +30,24 @@ class SafetyAnalyzer {
       dangerous_weather_codes: [
         95,
         96,
-        99, // Thunderstorm
+        99, // Badai petir
         85,
-        86, // Heavy snow
+        86, // Salju berat
         67,
-        77, // Freezing rain
+        77, // Hujan es
         82,
         83,
-        84, // Heavy rain showers
+        84, // Hujan lebat
       ],
       moderate_weather_codes: [
         80,
-        81, // Light to moderate rain showers
+        81, // Hujan ringan hingga sedang
         61,
         63,
-        65, // Rain
+        65, // Hujan
         71,
         73,
-        75, // Snow
+        75, // Salju
       ],
     };
   }
@@ -234,7 +234,7 @@ class SafetyAnalyzer {
     };
   }
 
-  // Mengambil nilai saat ini dari data cuaca
+  // Ambil nilai saat ini dari data cuaca
   _getCurrentValue(weatherData, parameter, hourIndex = 0) {
     const hourly = weatherData.hourly || {};
 
@@ -332,7 +332,7 @@ class SafetyAnalyzer {
     }
   }
 
-  // Menghitung skor keamanan keseluruhan
+  // Hitung skor keamanan keseluruhan
   _calculateSafetyScore(evaluation) {
     const weights = {
       wave_height: 0.25,
@@ -356,7 +356,7 @@ class SafetyAnalyzer {
     return totalWeight > 0 ? Math.round(totalScore / totalWeight) : 50;
   }
 
-  // Mendapatkan level keamanan berdasarkan skor
+  // Ambil level keamanan berdasarkan skor
   _getSafetyLevel(score) {
     if (score >= 80) return "AMAN";
     if (score >= 60) return "HATI-HATI";
@@ -440,7 +440,7 @@ class SafetyAnalyzer {
     );
   }
 
-  // Menghitung tren keamanan
+  // Hitung tren keamanan
   _calculateSafetyTrend(periods) {
     if (periods.length < 2) return "stable";
 
@@ -453,7 +453,7 @@ class SafetyAnalyzer {
     return "stable";
   }
 
-  // Menghitung skor keamanan keseluruhan
+  // Hitung skor keamanan keseluruhan
   _calculateOverallSafety(currentAnalysis, forecastAnalysis) {
     const currentWeight = 0.6;
     const forecastWeight = 0.4;
@@ -470,7 +470,7 @@ class SafetyAnalyzer {
     };
   }
 
-  // Menghitung tingkat kepercayaan analisis
+  // Hitung tingkat kepercayaan analisis
   _calculateConfidence(currentAnalysis, forecastAnalysis) {
     // Confidence berdasarkan ketersediaan data dan konsistensi
     let confidence = 100;

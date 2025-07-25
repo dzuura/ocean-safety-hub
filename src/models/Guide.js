@@ -1,8 +1,4 @@
-/**
- * Guide Model
- * Model untuk item panduan keselamatan berlayar
- */
-
+// Model untuk panduan keselamatan
 class Guide {
   constructor(data = {}) {
     this.id = data.id || null;
@@ -33,9 +29,7 @@ class Guide {
     this.created_by = data.created_by || null;
   }
 
-  /**
-   * Validasi data guide
-   */
+  // Validasi data panduan
   validate() {
     const errors = {};
 
@@ -73,9 +67,7 @@ class Guide {
     };
   }
 
-  /**
-   * Validasi URL
-   */
+  // Validasi URL
   isValidUrl(string) {
     try {
       new URL(string);
@@ -85,9 +77,7 @@ class Guide {
     }
   }
 
-  /**
-   * Cek apakah guide ini cocok dengan kondisi perjalanan
-   */
+  // Cek apakah panduan ini cocok untuk kondisi perjalanan
   matchesConditions(tripConditions) {
     const {
       trip_purpose,
@@ -122,9 +112,7 @@ class Guide {
     return checks.every(check => check);
   }
 
-  /**
-   * Convert ke format untuk database
-   */
+  // Konversi ke format Firestore
   toFirestore() {
     const data = { ...this };
     delete data.id;
@@ -132,9 +120,7 @@ class Guide {
     return data;
   }
 
-  /**
-   * Convert dari format database
-   */
+  // Konversi dari format Firestore
   static fromFirestore(doc) {
     const data = doc.data();
     return new Guide({
@@ -143,9 +129,7 @@ class Guide {
     });
   }
 
-  /**
-   * Convert ke format API response
-   */
+  // Konversi ke format JSON
   toJSON() {
     return {
       id: this.id,
@@ -165,9 +149,7 @@ class Guide {
     };
   }
 
-  /**
-   * Convert ke format untuk checklist (tanpa video_url)
-   */
+  // Konversi ke format untuk checklist
   toChecklistItem() {
     return {
       id: this.id,
@@ -182,9 +164,7 @@ class Guide {
     };
   }
 
-  /**
-   * Convert ke format untuk summary (dengan video_url)
-   */
+  // Konversi ke format untuk rangkuman
   toSummaryItem() {
     return {
       id: this.id,

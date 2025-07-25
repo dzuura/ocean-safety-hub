@@ -85,10 +85,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-/**
- * POST /api/auth/login
- * Login dengan email dan password
- */
+// Login dengan email/password
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -102,16 +99,13 @@ router.post("/login", async (req, res) => {
       return ApiResponse.error(res, "Service autentikasi tidak tersedia");
     }
 
-    // Verifikasi user exists
+    // Verifikasi user yang ada
     const userRecord = await authAdmin.getUserByEmail(email);
 
     // Generate custom token untuk login
-    // Note: Firebase Admin SDK tidak bisa verify password secara langsung
-    // Password verification harus dilakukan di client-side dengan Firebase Client SDK
-    // Endpoint ini memberikan custom token untuk testing/development
     const customToken = await authAdmin.createCustomToken(userRecord.uid);
 
-    // Get user data dari Firestore
+    // Ambil data user dari Firestore
     const db = getFirestoreAdmin();
     let userData = {
       uid: userRecord.uid,
@@ -148,10 +142,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-/**
- * POST /api/auth/verify
- * Verifikasi Firebase ID Token
- */
+// Verifikasi Firebase ID Token
 router.post("/verify", authenticateToken, (req, res) => {
   try {
     // Jika middleware authenticateToken berhasil, berarti token valid
@@ -170,10 +161,7 @@ router.post("/verify", authenticateToken, (req, res) => {
   }
 });
 
-/**
- * GET /api/auth/profile
- * Mendapatkan profil user yang sedang login
- */
+// Mendapatkan profil user yang sedang login
 router.get("/profile", authenticateToken, async (req, res) => {
   try {
     const db = getFirestoreAdmin();
@@ -204,10 +192,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
   }
 });
 
-/**
- * PUT /api/auth/profile
- * Update profil user
- */
+// Update profil user
 router.put("/profile", authenticateToken, async (req, res) => {
   try {
     const db = getFirestoreAdmin();
@@ -240,10 +225,7 @@ router.put("/profile", authenticateToken, async (req, res) => {
   }
 });
 
-/**
- * POST /api/auth/google-signin
- * Handle Google Sign-In dari frontend
- */
+// Login dengan Google OAuth
 router.post("/google-signin", async (req, res) => {
   try {
     const { idToken } = req.body;
@@ -288,7 +270,7 @@ router.post("/google-signin", async (req, res) => {
         });
       } else {
         userData = userDoc.data();
-        // Update last login time
+        // Update timestamp terakhir akses
         await db.collection("users").doc(decodedToken.uid).update({
           updatedAt: new Date().toISOString(),
         });
@@ -321,10 +303,7 @@ router.post("/google-signin", async (req, res) => {
   }
 });
 
-/**
- * POST /api/auth/send-verification-email
- * Kirim email verifikasi
- */
+// Verifikasi email
 router.post("/send-verification-email", authenticateToken, async (req, res) => {
   try {
     const authAdmin = getAuthAdmin();
@@ -343,8 +322,6 @@ router.post("/send-verification-email", authenticateToken, async (req, res) => {
       actionCodeSettings
     );
 
-    // Di production, Anda akan mengirim email menggunakan service seperti SendGrid
-    // Untuk development, kita return link-nya
     return ApiResponse.success(
       res,
       { verificationLink: link },
@@ -356,10 +333,7 @@ router.post("/send-verification-email", authenticateToken, async (req, res) => {
   }
 });
 
-/**
- * POST /api/auth/create-user-record
- * Membuat record user di Firestore setelah registrasi
- */
+// Membuat user record baru
 router.post("/create-user-record", authenticateToken, async (req, res) => {
   try {
     const db = getFirestoreAdmin();
@@ -399,10 +373,7 @@ router.post("/create-user-record", authenticateToken, async (req, res) => {
   }
 });
 
-/**
- * POST /api/auth/logout
- * Logout user (revoke refresh tokens)
- */
+// Logout (revoke refresh tokens)
 router.post("/logout", authenticateToken, async (req, res) => {
   try {
     const authAdmin = getAuthAdmin();
@@ -424,10 +395,7 @@ router.post("/logout", authenticateToken, async (req, res) => {
   }
 });
 
-/**
- * POST /api/auth/forgot-password
- * Kirim email reset password
- */
+// Kirim email reset password
 router.post("/forgot-password", async (req, res) => {
   try {
     const { email } = req.body;
@@ -452,8 +420,6 @@ router.post("/forgot-password", async (req, res) => {
       actionCodeSettings
     );
 
-    // Di production, Anda akan mengirim email menggunakan service seperti SendGrid
-    // Untuk development, kita return link-nya
     return ApiResponse.success(
       res,
       { resetLink: link },
@@ -463,7 +429,6 @@ router.post("/forgot-password", async (req, res) => {
     Logger.error("Failed to send password reset email:", error);
 
     if (error.code === "auth/user-not-found") {
-      // Untuk keamanan, jangan beri tahu bahwa email tidak ditemukan
       return ApiResponse.success(
         res,
         null,
@@ -475,10 +440,7 @@ router.post("/forgot-password", async (req, res) => {
   }
 });
 
-/**
- * DELETE /api/auth/account
- * Hapus akun user
- */
+// Hapus akun user
 router.delete("/account", authenticateToken, async (req, res) => {
   try {
     const authAdmin = getAuthAdmin();

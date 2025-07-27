@@ -88,8 +88,6 @@ module.exports = {
   getFirebaseAdmin,
   getFirestoreAdmin,
   getAuthAdmin,
-  getClientAuth,
-  getFirestoreClient,
   verifyIdToken,
   get db() {
     return getDb();

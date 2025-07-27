@@ -1,3 +1,13 @@
+// Fungsi untuk validasi URL
+const isValidUrl = (string) => {
+  try {
+    new URL(string);
+    return true;
+  } catch (err) {
+    return false;
+  }
+};
+
 // Validasi parameter untuk mendapatkan data cuaca
 const validateWeatherParams = (req, res, next) => {
   const { latitude, longitude } = req.query;

@@ -407,10 +407,90 @@ const validateGuideData = (req, res, next) => {
   next();
 };
 
+// Validasi data panduan untuk update (hanya validasi field yang dikirim)
+const validateGuideUpdateData = (req, res, next) => {
+  const {
+    title,
+    description,
+    image_url,
+    video_url,
+    category,
+    priority,
+    estimated_time_minutes,
+  } = req.body;
+  const errors = {};
+
+  // Validasi title hanya jika dikirim
+  if (title !== undefined && (!title || title.trim().length < 3)) {
+    errors.title = "Judul panduan minimal 3 karakter";
+  }
+
+  // Validasi description hanya jika dikirim
+  if (
+    description !== undefined &&
+    (!description || description.trim().length < 10)
+  ) {
+    errors.description = "Deskripsi panduan minimal 10 karakter";
+  }
+
+  // Validasi image_url hanya jika dikirim
+  if (image_url !== undefined && (!image_url || !isValidUrl(image_url))) {
+    errors.image_url = "URL gambar tidak valid";
+  }
+
+  // Validasi video_url hanya jika dikirim dan tidak kosong
+  if (video_url && !isValidUrl(video_url)) {
+    errors.video_url = "URL video tidak valid";
+  }
+
+  // Validasi category hanya jika dikirim
+  if (
+    category &&
+    !["general", "safety", "navigation", "emergency"].includes(category)
+  ) {
+    errors.category =
+      "Kategori harus salah satu dari: general, safety, navigation, emergency";
+  }
+
+  // Validasi priority hanya jika dikirim
+  if (priority !== undefined) {
+    const priorityNum = parseInt(priority);
+    if (isNaN(priorityNum) || priorityNum < 1 || priorityNum > 5) {
+      errors.priority = "Prioritas harus berupa angka antara 1-5";
+    }
+  }
+
+  // Validasi estimated_time_minutes hanya jika dikirim
+  if (estimated_time_minutes !== undefined) {
+    const timeNum = parseInt(estimated_time_minutes);
+    if (isNaN(timeNum) || timeNum < 1 || timeNum > 120) {
+      errors.estimated_time_minutes =
+        "Estimasi waktu harus berupa angka antara 1-120 menit";
+    }
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({
+      success: false,
+      error: "Data panduan tidak valid",
+      details: errors,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  next();
+};
+
 // Validasi informasi perjalanan
 const validateTripInfo = (req, res, next) => {
-  const { trip_purpose, duration_minutes, passenger_count, boat_type } =
-    req.body;
+  const {
+    trip_purpose,
+    duration_minutes,
+    passenger_count,
+    boat_type,
+    weather_condition,
+    distance_km,
+  } = req.body;
   const errors = {};
 
   if (!trip_purpose) {
@@ -425,10 +505,12 @@ const validateTripInfo = (req, res, next) => {
     errors.duration_minutes = "Durasi perjalanan diperlukan";
   } else {
     const duration = parseInt(duration_minutes);
-    if (isNaN(duration) || duration < 15) {
-      errors.duration_minutes = "Durasi perjalanan minimal 15 menit";
+    if (isNaN(duration) || duration < 30) {
+      errors.duration_minutes =
+        "Durasi perjalanan pulang pergi minimal 30 menit";
     } else if (duration > 1440) {
-      errors.duration_minutes = "Durasi perjalanan maksimal 24 jam";
+      errors.duration_minutes =
+        "Durasi perjalanan pulang pergi maksimal 24 jam";
     }
   }
 
@@ -449,6 +531,23 @@ const validateTripInfo = (req, res, next) => {
     !["perahu_kecil", "kapal_nelayan", "kapal_besar"].includes(boat_type)
   ) {
     errors.boat_type = "Jenis perahu tidak valid";
+  }
+
+  if (!weather_condition) {
+    errors.weather_condition = "Kondisi cuaca harus dipilih";
+  } else if (!["calm", "moderate", "rough"].includes(weather_condition)) {
+    errors.weather_condition = "Kondisi cuaca tidak valid";
+  }
+
+  if (!distance_km) {
+    errors.distance_km = "Jarak tempuh diperlukan";
+  } else {
+    const distance = parseFloat(distance_km);
+    if (isNaN(distance) || distance < 0.1) {
+      errors.distance_km = "Jarak tempuh minimal 0.1 km";
+    } else if (distance > 1000) {
+      errors.distance_km = "Jarak tempuh maksimal 1000 km";
+    }
   }
 
   if (Object.keys(errors).length > 0) {
@@ -496,6 +595,7 @@ module.exports = {
   validateVoteData,
   validateCommentData,
   validateGuideData,
+  validateGuideUpdateData,
   validateTripInfo,
   validateChecklistUpdate,
 };

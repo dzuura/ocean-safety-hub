@@ -159,7 +159,7 @@ app.use((err, _req, res, _next) => {
 const PORT = config.port;
 app.listen(PORT, () => {
   console.log(`🌊 Pelaut Hebat API berjalan di port ${PORT}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+  console.log(`🔗 Health check: http://localhost:${PORT}/api/health`);
   console.log(`🌍 Environment: ${config.nodeEnv}`);
 });
 

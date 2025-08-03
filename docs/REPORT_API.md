@@ -9,29 +9,32 @@ API Laporan memungkinkan anggota komunitas untuk membuat, memverifikasi, dan men
 ## 🎯 Endpoint Laporan
 
 ### 1. Buat Laporan Baru
+
 **`POST /api/report`**
 
 Membuat laporan kondisi laut baru dalam komunitas.
 
 #### Parameter Request Body
-| Parameter | Tipe | Wajib | Deskripsi |
-|-----------|------|-------|-----------|
-| `community_id` | string | ✅ | ID komunitas |
-| `title` | string | ✅ | Judul laporan (min 5 karakter) |
-| `description` | string | ✅ | Deskripsi laporan (min 20 karakter) |
-| `location` | object | ✅ | Data lokasi laporan |
-| `location.latitude` | float | ✅ | Latitude (-90 sampai 90) |
-| `location.longitude` | float | ✅ | Longitude (-180 sampai 180) |
-| `location.address` | string | ❌ | Alamat lokasi |
-| `location.area_name` | string | ❌ | Nama area |
-| `conditions` | object | ❌ | Kondisi cuaca dan laut |
-| `safety_assessment` | object | ❌ | Penilaian keamanan |
-| `media` | object | ❌ | Media foto/video |
-| `tags` | array | ❌ | Tag laporan |
-| `urgency_level` | string | ❌ | Level urgensi: low, normal, high, critical |
-| `valid_until` | string | ❌ | Waktu kedaluwarsa (ISO string) |
+
+| Parameter            | Tipe   | Wajib | Deskripsi                                  |
+| -------------------- | ------ | ----- | ------------------------------------------ |
+| `community_id`       | string | ✅    | ID komunitas                               |
+| `title`              | string | ✅    | Judul laporan (min 5 karakter)             |
+| `description`        | string | ✅    | Deskripsi laporan (min 20 karakter)        |
+| `location`           | object | ✅    | Data lokasi laporan                        |
+| `location.latitude`  | float  | ✅    | Latitude (-90 sampai 90)                   |
+| `location.longitude` | float  | ✅    | Longitude (-180 sampai 180)                |
+| `location.address`   | string | ❌    | Alamat lokasi                              |
+| `location.area_name` | string | ❌    | Nama area                                  |
+| `conditions`         | object | ❌    | Kondisi cuaca dan laut                     |
+| `safety_assessment`  | object | ❌    | Penilaian keamanan                         |
+| `media`              | object | ❌    | Media foto/video                           |
+| `tags`               | array  | ❌    | Tag laporan                                |
+| `urgency_level`      | string | ❌    | Level urgensi: low, normal, high, critical |
+| `valid_until`        | string | ❌    | Waktu kedaluwarsa (ISO string)             |
 
 #### Contoh Request
+
 ```bash
 POST /api/report
 Authorization: Bearer <token>
@@ -76,6 +79,7 @@ Content-Type: application/json
 ```
 
 #### Contoh Response
+
 ```json
 {
   "success": true,
@@ -114,31 +118,71 @@ Content-Type: application/json
 ---
 
 ### 2. Cari Laporan
+
 **`GET /api/report/search`**
 
 Mencari laporan dengan berbagai filter.
 
 #### Parameter Query
-| Parameter | Tipe | Wajib | Deskripsi |
-|-----------|------|-------|-----------|
-| `community_id` | string | ❌ | Filter berdasarkan komunitas |
-| `author_id` | string | ❌ | Filter berdasarkan pembuat |
-| `urgency_level` | string | ❌ | Filter berdasarkan tingkat urgensi |
-| `verification_status` | string | ❌ | Filter berdasarkan status verifikasi |
-| `tags` | array | ❌ | Filter berdasarkan tag |
-| `near_lat` | float | ❌ | Latitude untuk pencarian lokasi |
-| `near_lng` | float | ❌ | Longitude untuk pencarian lokasi |
-| `radius_km` | float | ❌ | Radius pencarian dalam km (default: 10) |
-| `sort_by` | string | ❌ | Urutan: created_at, votes, urgency, verification |
-| `limit` | integer | ❌ | Jumlah hasil (default: 20) |
-| `include_expired` | boolean | ❌ | Sertakan laporan kedaluwarsa |
+
+| Parameter             | Tipe         | Wajib | Deskripsi                            | Nilai yang Valid                                 |
+| --------------------- | ------------ | ----- | ------------------------------------ | ------------------------------------------------ |
+| `community_id`        | string       | ❌    | Filter berdasarkan komunitas         | ID komunitas yang valid                          |
+| `author_id`           | string       | ❌    | Filter berdasarkan pembuat           | User ID yang valid                               |
+| `urgency_level`       | string       | ❌    | Filter berdasarkan tingkat urgensi   | `low`, `normal`, `high`, `critical`              |
+| `verification_status` | string       | ❌    | Filter berdasarkan status verifikasi | `pending`, `verified`, `disputed`, `rejected`    |
+| `tags`                | array/string | ❌    | Filter berdasarkan tag               | Array tag atau single tag                        |
+| `near_lat`            | float        | ❌    | Latitude untuk pencarian lokasi      | -90.0 sampai 90.0                                |
+| `near_lng`            | float        | ❌    | Longitude untuk pencarian lokasi     | -180.0 sampai 180.0                              |
+| `radius_km`           | float        | ❌    | Radius pencarian dalam km            | 0.1 sampai 1000 (default: 10)                    |
+| `sort_by`             | string       | ❌    | Urutan hasil                         | `created_at`, `votes`, `urgency`, `verification` |
+| `limit`               | integer      | ❌    | Jumlah hasil per halaman             | 1 sampai 100 (default: 20)                       |
+| `start_after`         | string       | ❌    | ID laporan untuk pagination          | Report ID yang valid                             |
+| `include_expired`     | boolean      | ❌    | Sertakan laporan kedaluwarsa         | `true`, `false` (default: false)                 |
+
+#### Query Parameter
+
+##### **urgency_level**
+
+- `low`: Tingkat urgensi rendah (informasi umum)
+- `normal`: Tingkat urgensi normal (kondisi standar)
+- `high`: Tingkat urgensi tinggi (perlu perhatian)
+- `critical`: Tingkat urgensi kritis (bahaya segera)
+
+##### **verification_status**
+
+- `pending`: Menunggu verifikasi
+- `verified`: Sudah diverifikasi dan valid
+- `disputed`: Dipertanyakan keakuratannya
+- `rejected`: Ditolak karena tidak valid
+
+##### **sort_by**
+
+- `created_at`: Urutkan berdasarkan waktu pembuatan (terbaru dulu)
+- `votes`: Urutkan berdasarkan jumlah vote (terbanyak dulu)
+- `urgency`: Urutkan berdasarkan tingkat urgensi (tertinggi dulu)
+- `verification`: Urutkan berdasarkan confidence score verifikasi (tertinggi dulu)
+
+##### **tags** (Contoh tag yang umum digunakan)
+
+- `gelombang_tinggi`: Kondisi gelombang tinggi
+- `angin_kencang`: Angin kencang
+- `kabut_tebal`: Kabut tebal/visibility rendah
+- `cuaca_buruk`: Cuaca buruk secara umum
+- `arus_kuat`: Arus laut yang kuat
+- `pasang_surut`: Kondisi pasang surut ekstrem
+- `bahaya_navigasi`: Bahaya untuk navigasi
+- `kecelakaan`: Laporan kecelakaan
+- `pencarian_pertolongan`: SAR/pencarian dan pertolongan
 
 #### Contoh Request
+
 ```bash
 GET /api/report/search?community_id=community_123&urgency_level=high&limit=10
 ```
 
 #### Contoh Response
+
 ```json
 {
   "success": true,
@@ -171,24 +215,28 @@ GET /api/report/search?community_id=community_123&urgency_level=high&limit=10
 ---
 
 ### 3. Laporan Berdasarkan Lokasi
+
 **`GET /api/report/location`**
 
 Mendapatkan laporan di sekitar koordinat tertentu.
 
 #### Parameter Query
-| Parameter | Tipe | Wajib | Deskripsi |
-|-----------|------|-------|-----------|
-| `latitude` | float | ✅ | Latitude pusat pencarian |
-| `longitude` | float | ✅ | Longitude pusat pencarian |
-| `radius_km` | float | ❌ | Radius pencarian (default: 10) |
-| `limit` | integer | ❌ | Jumlah hasil (default: 20) |
+
+| Parameter   | Tipe    | Wajib | Deskripsi                      |
+| ----------- | ------- | ----- | ------------------------------ |
+| `latitude`  | float   | ✅    | Latitude pusat pencarian       |
+| `longitude` | float   | ✅    | Longitude pusat pencarian      |
+| `radius_km` | float   | ❌    | Radius pencarian (default: 10) |
+| `limit`     | integer | ❌    | Jumlah hasil (default: 20)     |
 
 #### Contoh Request
+
 ```bash
 GET /api/report/location?latitude=-6.1344&longitude=106.8446&radius_km=5
 ```
 
 #### Contoh Response
+
 ```json
 {
   "success": true,
@@ -218,17 +266,20 @@ GET /api/report/location?latitude=-6.1344&longitude=106.8446&radius_km=5
 ---
 
 ### 4. Detail Laporan
+
 **`GET /api/report/:reportId`**
 
 Mendapatkan detail lengkap laporan.
 
 #### Contoh Request
+
 ```bash
 GET /api/report/report_456
 Authorization: Bearer <token>
 ```
 
 #### Contoh Response
+
 ```json
 {
   "success": true,
@@ -285,17 +336,20 @@ Authorization: Bearer <token>
 ---
 
 ### 5. Vote Laporan
+
 **`POST /api/report/:reportId/vote`**
 
 Memberikan vote dan rating akurasi pada laporan.
 
 #### Parameter Request Body
-| Parameter | Tipe | Wajib | Deskripsi |
-|-----------|------|-------|-----------|
-| `vote_type` | string | ❌ | Jenis vote: "up" atau "down" (kosong untuk hapus vote) |
-| `accuracy_rating` | integer | ❌ | Rating akurasi 1-5 |
+
+| Parameter         | Tipe    | Wajib | Deskripsi                                              |
+| ----------------- | ------- | ----- | ------------------------------------------------------ |
+| `vote_type`       | string  | ❌    | Jenis vote: "up" atau "down" (kosong untuk hapus vote) |
+| `accuracy_rating` | integer | ❌    | Rating akurasi 1-5                                     |
 
 #### Contoh Request
+
 ```bash
 POST /api/report/report_456/vote
 Authorization: Bearer <token>
@@ -308,6 +362,7 @@ Content-Type: application/json
 ```
 
 #### Contoh Response
+
 ```json
 {
   "success": true,
@@ -327,17 +382,20 @@ Content-Type: application/json
 ---
 
 ### 6. Verifikasi Laporan
+
 **`POST /api/report/:reportId/verify`**
 
 Memverifikasi laporan (hanya moderator/admin).
 
 #### Parameter Request Body
-| Parameter | Tipe | Wajib | Deskripsi |
-|-----------|------|-------|-----------|
-| `status` | string | ✅ | Status: "verified", "disputed", "rejected" |
-| `notes` | string | ❌ | Catatan verifikasi |
+
+| Parameter | Tipe   | Wajib | Deskripsi                                  |
+| --------- | ------ | ----- | ------------------------------------------ |
+| `status`  | string | ✅    | Status: "verified", "disputed", "rejected" |
+| `notes`   | string | ❌    | Catatan verifikasi                         |
 
 #### Contoh Request
+
 ```bash
 POST /api/report/report_456/verify
 Authorization: Bearer <token>
@@ -350,6 +408,7 @@ Content-Type: application/json
 ```
 
 #### Contoh Response
+
 ```json
 {
   "success": true,
@@ -370,16 +429,19 @@ Content-Type: application/json
 ---
 
 ### 7. Tambah Komentar
+
 **`POST /api/report/:reportId/comments`**
 
 Menambahkan komentar pada laporan.
 
 #### Parameter Request Body
-| Parameter | Tipe | Wajib | Deskripsi |
-|-----------|------|-------|-----------|
-| `content` | string | ✅ | Isi komentar (min 5 karakter) |
+
+| Parameter | Tipe   | Wajib | Deskripsi                     |
+| --------- | ------ | ----- | ----------------------------- |
+| `content` | string | ✅    | Isi komentar (min 5 karakter) |
 
 #### Contoh Request
+
 ```bash
 POST /api/report/report_456/comments
 Authorization: Bearer <token>
@@ -391,6 +453,7 @@ Content-Type: application/json
 ```
 
 #### Contoh Response
+
 ```json
 {
   "success": true,
@@ -412,17 +475,20 @@ Content-Type: application/json
 ---
 
 ### 8. Statistik Laporan Komunitas
+
 **`GET /api/report/community/:communityId/stats`**
 
 Mendapatkan statistik laporan untuk komunitas.
 
 #### Contoh Request
+
 ```bash
 GET /api/report/community/community_123/stats
 Authorization: Bearer <token>
 ```
 
 #### Contoh Response
+
 ```json
 {
   "success": true,
@@ -445,6 +511,7 @@ Authorization: Bearer <token>
 ## 🚨 Response Error
 
 ### Error Validasi (400)
+
 ```json
 {
   "success": false,
@@ -457,6 +524,7 @@ Authorization: Bearer <token>
 ```
 
 ### Error Akses Ditolak (403)
+
 ```json
 {
   "success": false,

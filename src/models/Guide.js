@@ -169,6 +169,7 @@ class Guide {
       title: this.title,
       description: this.description,
       image_url: this.image_url,
+      video_url: this.video_url,
       category: this.category,
       priority: this.priority,
       estimated_time_minutes: this.estimated_time_minutes,

@@ -91,15 +91,47 @@ Mencari komunitas dengan berbagai filter.
 
 #### Parameter Query
 
-| Parameter     | Tipe    | Wajib | Deskripsi                             |
-| ------------- | ------- | ----- | ------------------------------------- |
-| `q`           | string  | ❌    | Kata kunci pencarian                  |
-| `region`      | string  | ❌    | Filter berdasarkan wilayah            |
-| `tags`        | array   | ❌    | Filter berdasarkan tag                |
-| `is_public`   | boolean | ❌    | Filter komunitas publik/privat        |
-| `sort_by`     | string  | ❌    | Urutan: created_at, members, activity |
-| `limit`       | integer | ❌    | Jumlah hasil (default: 20)            |
-| `start_after` | string  | ❌    | ID untuk pagination                   |
+| Parameter     | Tipe         | Wajib | Deskripsi                      | Nilai yang Valid                    |
+| ------------- | ------------ | ----- | ------------------------------ | ----------------------------------- |
+| `q`           | string       | ❌    | Kata kunci pencarian           | Teks bebas untuk nama/deskripsi     |
+| `region`      | string       | ❌    | Filter berdasarkan wilayah     | `WIB`, `WITA`, `WIT`                |
+| `tags`        | array/string | ❌    | Filter berdasarkan tag         | Array tag atau single tag           |
+| `is_public`   | boolean      | ❌    | Filter komunitas publik/privat | `true`, `false`                     |
+| `sort_by`     | string       | ❌    | Urutan hasil                   | `created_at`, `members`, `activity` |
+| `limit`       | integer      | ❌    | Jumlah hasil per halaman       | 1 sampai 100 (default: 20)          |
+| `start_after` | string       | ❌    | ID komunitas untuk pagination  | Community ID yang valid             |
+
+#### Query Parameter
+
+##### **region** (Zona Waktu Indonesia)
+
+- `WIB`: Waktu Indonesia Barat (Jakarta, Sumatra, Kalimantan Barat/Tengah)
+- `WITA`: Waktu Indonesia Tengah (Bali, NTB, NTT, Sulawesi, Kalimantan Selatan/Timur)
+- `WIT`: Waktu Indonesia Timur (Maluku, Papua)
+
+##### **tags** (Contoh tag yang umum digunakan)
+
+- `nelayan`: Komunitas nelayan
+- `wisata_bahari`: Wisata bahari dan diving
+- `pelabuhan`: Komunitas pelabuhan
+- `kapal_tradisional`: Kapal tradisional dan budaya maritim
+- `konservasi_laut`: Konservasi dan lingkungan laut
+- `safety_training`: Pelatihan keselamatan
+- `cuaca_maritim`: Informasi cuaca dan kondisi laut
+- `perdagangan_ikan`: Perdagangan dan pasar ikan
+- `teknologi_maritim`: Teknologi dan inovasi maritim
+- `rescue_team`: Tim SAR dan penyelamatan
+
+##### **is_public**
+
+- `true`: Komunitas publik (dapat dilihat dan diikuti siapa saja)
+- `false`: Komunitas privat (perlu persetujuan admin untuk bergabung)
+
+##### **sort_by**
+
+- `created_at`: Urutkan berdasarkan waktu pembuatan (terbaru dulu)
+- `members`: Urutkan berdasarkan jumlah anggota (terbanyak dulu)
+- `activity`: Urutkan berdasarkan aktivitas terakhir (paling aktif dulu)
 
 #### Contoh Request
 

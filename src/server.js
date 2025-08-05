@@ -12,8 +12,35 @@ const app = express();
 
 initializeFirebase();
 
+// Trust proxy for Google App Engine and other reverse proxies
+app.set("trust proxy", true);
+
 app.use(helmet());
 app.use(cors(config.cors));
+
+// Handle preflight requests explicitly
+app.options("*", cors(config.cors));
+
+// Fallback CORS handler
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(",").map((o) => o.trim())
+    : ["http://localhost:3000"];
+
+  if (allowedOrigins.includes(origin)) {
+    res.header("Access-Control-Allow-Origin", origin);
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+    res.header(
+      "Access-Control-Allow-Headers",
+      "Content-Type,Authorization,X-Requested-With"
+    );
+  }
+
+  next();
+});
+
 app.use(compression());
 app.use(morgan(config.nodeEnv === "production" ? "combined" : "dev"));
 

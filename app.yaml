@@ -1,0 +1,46 @@
+runtime: nodejs22
+
+instance_class: F1
+
+entrypoint: npm start
+
+automatic_scaling:
+  target_cpu_utilization: 0.65
+  min_instances: 0
+  max_instances: 1
+
+env_variables:
+  # Server Configuration
+  NODE_ENV: "production"
+
+  # API Keys
+  OPEN_METEO_API_URL: "https://api.open-meteo.com/v1"
+  OPEN_METEO_MARINE_URL: "https://marine-api.open-meteo.com/v1/marine"
+
+  # Gemini AI Configuration
+  GEMINI_API_KEY: "AIzaSyD25adzllD4TvM8sPmV8Euizs25n44GwKg"
+  GEMINI_MODEL: "gemini-2.0-flash"
+  GEMINI_TEMPERATURE: "0.7"
+
+  # Firebase Configuration
+  FIREBASE_PROJECT_ID: "pelaut-hebat"
+  FIREBASE_PRIVATE_KEY_ID: "dabbf780534939dfcaa3e6c52f837c38976c6d55"
+  FIREBASE_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDCVq6Fb4M9rwmF\nMCZIijujyRfQg+0b2SkFJpai85PHEYMxr+aSZDcbek9NqbHQmDreja/uNRJWFoFs\nzzHExD+CtrgDCHr13kKfSzdskQ0BIQL8Jt2dlpulH4WMNGBXmLjZBPv3qHvk1QVF\n5LvXybj7PKlk6cwFZ96AYqRCBAo6l1YW5sOPbby7ZAp+RmFUoK6bYROEMnJYIRFX\n3y29SfJafCa9DodbtMUX7EVytA/GcggXJTNZjHvmiE5yB62BvTN/YiYa6wT2LVc2\nzIuXVPfaN5QH7ZoHn1a1sKqsprHHBqaz4EVOd/PC/gfqn8M4gTZ7G6A9SU9KOOXC\n/4aN9DTzAgMBAAECggEAHHcUilhHwZSOhm2uYy2sMqn/zPul5/r/oSYtJk0bNitV\n1hn3tzWVRMxo1UKn2EU+n4k4CGIe/3ETIAbxOUBYNSM3rL9kk02CNfw5xV3cU8VW\nv0GfcGJhBedUvlvlngRb/vMAnR6WlxwEm7Th4WebVWFl8RwLADezRYbX8bt5wWmr\nf0zLB6RXOZDj98on5OkrG3/dogGR5Iw3Sy4gAIo1AECdfTjLJ+y/Hp8ta9qeEAG2\n6z8TeB/RCy+/pCnveujBs7kzthPhonT3kBOZcf50lKV4XQCq9v4qx1dP29257x85\niEcKxR0aYucXZmfII7YKJZzo/oMjvepZm4kg6NPxYQKBgQD7Shy3b04l7ubOju18\n/w+yG8cueOHQBbMJjbfESfuBxSxX3ZcN59WABRo3O+7HRU05Myq2O1dt3/jSvNi/\nh5JuPNh6bHW5UoUX+4WVuBTAU/2SDsSCrJJ+G9NDIj796QGDQBcbu5xUU7k6Pj0f\nPAcIgAqrSg4NmBvUFIpBsGNs6wKBgQDF+0YMFAzqbwolLW2hdOsAP/GxXTDZD3ic\n+MAesJE64N1xTmsAUqVRZLhz3VdXDIBqoHjBBQQBxFSPLZgVjG2+3Uw5QdbbSOEa\nj6kzxYuH/5EmukjBq3zgtB8+YulDezV/aypZoE1eU+cryoZYFVhnPQijSesaIIlb\nIS8njI82GQKBgF+udoS6Eu2Kq8OW1IK1s8pDnXHqgUDuCp/moERTTzq4UwwZybx3\nu+mFB9hkL6UclCzleKvuqHmjwGCtm3JCMtVawarLxX+NFjRthw3dC7m3wWNt0BFZ\nmGYAPk7fqVCQ+gx5yNK8euf5ARxWOnu8JYltB6L1DajLdD0qnQIqIZGFAoGBAMC/\n00GdH7n6I1lwsgR4LPcQSkHQpecd3eKNd5Ypdytok49ltl0ZGWR19/Kt8wOH41ps\nI0RgmrcRqvW+gQuxrYMeNsCj7geOG8JdTXFfCWp9kZav1HfhenHWS3jUmZ+eS8Zi\n0ldx7wFAFJeY1FTbazcPv+Ih7CeCt9emJh+OBDu5AoGAdMZGth2FyDA/3OWQSF0u\ngeq+FAloilC6ejmHIE7KIZsEkBqbYNHu4jLOfqkn6Wr0UKZkK/00jWibw0TDIHc5\nYp2RvtCSgjqelMYna38iRDmM5jkYrcfvZzwvcQckW9aRfQgb/pXMDtHXhuagZblQ\nbjb+7DkLID6ICN6rvmh1/OE=\n-----END PRIVATE KEY-----\n"
+  FIREBASE_CLIENT_EMAIL: "firebase-adminsdk-fbsvc@pelaut-hebat.iam.gserviceaccount.com"
+  FIREBASE_CLIENT_ID: "113425584477017967581"
+  FIREBASE_AUTH_URI: "https://accounts.google.com/o/oauth2/auth"
+  FIREBASE_TOKEN_URI: "https://oauth2.googleapis.com/token"
+  FIREBASE_CLIENT_X509_CERT_URL: "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40pelaut-hebat.iam.gserviceaccount.com"
+
+  # CORS Configuration
+  CORS_ORIGIN: "http://localhost:3000,https://pelauthebat.vercel.app"
+
+  # Rate Limiting
+  RATE_LIMIT_WINDOW_MS: "900000"
+  RATE_LIMIT_MAX_REQUESTS: "100"
+
+  # Cache Configuration
+  CACHE_TTL_SECONDS: "300"
+
+  # Notification Settings
+  NOTIFICATION_CHECK_INTERVAL_MINUTES: "30"

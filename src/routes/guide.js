@@ -14,6 +14,12 @@ const {
 } = require("../middleware/validation");
 
 router.get("/", optionalAuth, guideController.getAllGuides);
+router.get(
+  "/admin/statistics",
+  authenticateToken,
+  requireAdmin,
+  guideController.getStatistics
+);
 router.get("/:guideId", optionalAuth, guideController.getGuideById);
 router.post(
   "/",
@@ -34,12 +40,6 @@ router.delete(
   authenticateToken,
   requireAdmin,
   guideController.deleteGuide
-);
-router.get(
-  "/admin/statistics",
-  authenticateToken,
-  requireAdmin,
-  guideController.getStatistics
 );
 router.post(
   "/session/start",

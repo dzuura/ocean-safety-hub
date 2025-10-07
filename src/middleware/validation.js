@@ -181,6 +181,76 @@ const validateCommunityData = (req, res, next) => {
   next();
 };
 
+// Validasi data update komunitas (partial update allowed)
+const validateCommunityUpdateData = (req, res, next) => {
+  const { name, description, location, tags, rules, is_public, join_approval_required } = req.body;
+  const errors = {};
+
+  if (name !== undefined) {
+    if (typeof name !== "string" || name.trim().length < 3) {
+      errors.name = "Nama komunitas minimal 3 karakter";
+    }
+  }
+
+  if (description !== undefined) {
+    if (typeof description !== "string" || description.trim().length < 10) {
+      errors.description = "Deskripsi komunitas minimal 10 karakter";
+    }
+  }
+
+  if (location !== undefined) {
+    if (typeof location !== "object") {
+      errors.location = "Data lokasi tidak valid";
+    } else {
+      if (
+        location.latitude === undefined ||
+        location.longitude === undefined
+      ) {
+        errors.location = "Koordinat latitude dan longitude diperlukan";
+      } else {
+        const lat = parseFloat(location.latitude);
+        const lng = parseFloat(location.longitude);
+        if (isNaN(lat) || lat < -90 || lat > 90) {
+          errors.latitude = "Latitude harus berupa angka antara -90 dan 90";
+        }
+        if (isNaN(lng) || lng < -180 || lng > 180) {
+          errors.longitude = "Longitude harus berupa angka antara -180 dan 180";
+        }
+      }
+    }
+  }
+
+  if (tags !== undefined && !Array.isArray(tags)) {
+    errors.tags = "Tags harus berupa array";
+  }
+
+  if (rules !== undefined && !Array.isArray(rules)) {
+    errors.rules = "Rules harus berupa array";
+  }
+
+  if (is_public !== undefined && typeof is_public !== "boolean") {
+    errors.is_public = "is_public harus berupa boolean";
+  }
+
+  if (
+    join_approval_required !== undefined &&
+    typeof join_approval_required !== "boolean"
+  ) {
+    errors.join_approval_required = "join_approval_required harus berupa boolean";
+  }
+
+  if (Object.keys(errors).length > 0) {
+    return res.status(400).json({
+      success: false,
+      error: "Data tidak valid",
+      details: errors,
+      timestamp: new Date().toISOString(),
+    });
+  }
+
+  next();
+};
+
 // Validasi data anggota komunitas
 const validateMembershipData = (req, res, next) => {
   const { userId } = req.body;
@@ -590,6 +660,7 @@ module.exports = {
   validateAIParams,
   validateSafetyParams,
   validateCommunityData,
+  validateCommunityUpdateData,
   validateMembershipData,
   validateReportData,
   validateVoteData,

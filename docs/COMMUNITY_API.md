@@ -338,11 +338,13 @@ Authorization: Bearer <token>
     "members": [
       {
         "user_id": "user_456",
+        "name": "Ahmad Nelayan",
         "role": "admin",
         "joined_at": "2025-07-24T10:30:00Z"
       },
       {
         "user_id": "user_789",
+        "name": "Budi Nelayan",
         "role": "moderator",
         "joined_at": "2025-07-24T11:00:00Z"
       }
@@ -389,6 +391,89 @@ Content-Type: application/json
   "data": {
     "id": "community_123",
     "moderators": ["user_789"]
+  }
+}
+```
+
+### 9. Update Komunitas
+
+**`PUT /api/community/:communityId`**
+
+Memperbarui metadata komunitas. Hanya admin atau moderator yang dapat melakukan pembaruan.
+
+#### Parameter Request Body (semua opsional)
+| Parameter | Tipe | Wajib | Deskripsi |
+| --- | --- | --- | --- |
+| `name` | string | ❌ | Nama komunitas (min 3 karakter) |
+| `description` | string | ❌ | Deskripsi komunitas (min 10 karakter) |
+| `location` | object | ❌ | Lokasi komunitas |
+| `is_public` | boolean | ❌ | Ubah menjadi publik/privat |
+| `join_approval_required` | boolean | ❌ | Toggle persetujuan bergabung |
+| `tags` | array | ❌ | Daftar tag |
+| `rules` | array | ❌ | Aturan komunitas |
+
+#### Contoh Request
+
+```bash
+PUT /api/community/community_123
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "description": "Update deskripsi komunitas dengan informasi tambahan",
+  "is_public": false
+}
+```
+
+#### Contoh Response
+
+```json
+{
+  "success": true,
+  "message": "Komunitas berhasil diperbarui",
+  "data": {
+    "id": "community_123",
+    "name": "Nelayan Jakarta Utara",
+    "description": "Update deskripsi komunitas dengan informasi tambahan",
+    "is_public": false
+  }
+}
+```
+
+---
+
+### 10. Keluarkan Member
+
+**`DELETE /api/community/:communityId/members`**
+
+Endpoint untuk mengeluarkan member dari komunitas. Hanya moderator atau admin yang dapat melakukan aksi ini. Jangan mengeluarkan admin.
+
+#### Parameter Request Body
+| Parameter | Tipe | Wajib | Deskripsi |
+| --- | --- | --- | --- |
+| `userId` | string | ✅ | ID pengguna yang akan dikeluarkan |
+
+#### Contoh Request
+
+```bash
+DELETE /api/community/community_123/members
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "userId": "user_101"
+}
+```
+
+#### Contoh Response
+
+```json
+{
+  "success": true,
+  "message": "Member berhasil dikeluarkan",
+  "data": {
+    "id": "community_123",
+    "member_count": 24
   }
 }
 ```

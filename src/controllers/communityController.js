@@ -428,6 +428,41 @@ class CommunityController {
     }
   };
 
+  // Mengeluarkan member dari komunitas (admin/moderator)
+  removeMember = async (req, res) => {
+    try {
+      const { communityId } = req.params;
+      const { userId: targetUserId } = req.body;
+      const actorUserId = req.user.uid;
+
+      const community = await communityService.removeMember(
+        communityId,
+        targetUserId,
+        actorUserId
+      );
+
+      res.json({
+        success: true,
+        message: "Member berhasil dikeluarkan",
+        data: community,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error in removeMember:", error);
+      const statusCode = error.message.includes("Only moderator")
+        ? 403
+        : error.message.includes("not found")
+        ? 404
+        : 400;
+
+      res.status(statusCode).json({
+        success: false,
+        error: error.message,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  };
+
   // Mendapatkan peran pengguna dalam komunitas
   getUserRole(community, userId) {
     if (community.isAdmin(userId)) return "admin";

@@ -114,14 +114,7 @@ src/
 │   ├── reportService.js        # Report operations
 │   └── guideService.js         # Guide operations
 ├── utils/           # Utility functions
-└── docs/            # Documentation
-    ├── SAFETY_API.md
-    ├── COMMUNITY_API.md
-    ├── REPORT_API.md
-    ├── GUIDE_API.md
-    ├── WEATHER_API.md
-    ├── AI_API.md
-    └── AUTH_API.md
+└── docs/            # API Documentation
 ```
 
 ## 🔧 Environment Variables
@@ -175,9 +168,10 @@ Key variables:
 | `/api/community/:id`            | DELETE | Hapus komunitas (admin only)            | Yes           |
 | `/api/community/:id/join`       | POST   | Bergabung dengan komunitas              | Yes           |
 | `/api/community/:id/leave`      | POST   | Keluar dari komunitas                   | Yes           |
-| `/api/community/:id/members`    | GET    | Daftar anggota komunitas                | Optional      |
+| `/api/community/:id/members`    | GET    | Daftar anggota komunitas                | Yes           |
 | `/api/community/:id/moderators` | POST   | Tambah moderator (admin only)           | Yes           |
 | `/api/community/:id/moderators` | DELETE | Hapus moderator (admin only)            | Yes           |
+| `/api/community/:id/members`    | DELETE | Keluarkan member (moderator/admin only) | Yes           |
 
 ### 📊 Report Management
 

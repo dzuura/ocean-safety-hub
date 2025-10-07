@@ -339,6 +339,46 @@ class CommunityService {
     }
   }
 
+  // Menghapus member dari komunitas (bisa dipanggil oleh admin atau moderator)
+  async removeMember(communityId, targetUserId, actorUserId) {
+    try {
+      const community = await this.getCommunityById(communityId);
+
+      if (!community) {
+        throw new Error("Community not found");
+      }
+
+      // Hanya admin atau moderator yang dapat mengeluarkan member
+      if (!community.isAdmin(actorUserId) && !community.isModerator(actorUserId)) {
+        throw new Error("Only moderator or admin can remove members");
+      }
+
+      // Jangan mengeluarkan admin
+      if (community.isAdmin(targetUserId)) {
+        throw new Error("Cannot remove admin from community");
+      }
+
+      if (!community.isMember(targetUserId)) {
+        throw new Error("User is not a member");
+      }
+
+      // Update objek komunitas
+      community.removeMember(targetUserId);
+      community.removeModerator(targetUserId); // pastikan juga bukan moderator
+
+      await this.collection.doc(communityId).update(community.toFirestore());
+
+      // Hapus membership (soft)
+      await this.removeMembership(communityId, targetUserId);
+
+      console.log(`User ${targetUserId} removed from community ${communityId} by ${actorUserId}`);
+      return community;
+    } catch (error) {
+      console.error("Error removing member:", error);
+      throw error;
+    }
+  }
+
   // Mendapatkan anggota komunitas
   async getCommunityMembers(communityId, limit = 50) {
     try {
@@ -349,8 +389,38 @@ class CommunityService {
         .get();
 
       const members = [];
+      // Untuk setiap membership, ambil data user (nama) dari collection users
+      const db = this.collection.firestore;
+      const userIds = [];
       snapshot.forEach((doc) => {
-        members.push(doc.data());
+        const data = doc.data();
+        userIds.push(data.user_id);
+      });
+
+      // Ambil user docs secara batch (batas 10 per request untuk in query)
+      const userMap = {};
+      for (let i = 0; i < userIds.length; i += 10) {
+        const batch = userIds.slice(i, i + 10);
+        const usersSnapshot = await db
+          .collection("users")
+          .where("uid", "in", batch)
+          .get();
+
+        usersSnapshot.forEach((u) => {
+          const ud = u.data();
+          userMap[ud.uid] = ud;
+        });
+      }
+
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        const userData = userMap[data.user_id] || {};
+        members.push({
+          user_id: data.user_id,
+          name: userData.name || userData.displayName || null,
+          role: data.role,
+          joined_at: data.joined_at,
+        });
       });
 
       return members;

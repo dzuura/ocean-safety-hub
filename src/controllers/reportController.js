@@ -2,6 +2,62 @@ const reportService = require("../services/reportService");
 const communityService = require("../services/communityService");
 
 class ReportController {
+  // Menghapus laporan (hanya admin/moderator)
+  deleteReport = async (req, res) => {
+    try {
+      const { reportId } = req.params;
+      const userId = req.user.uid;
+
+      // Ambil report
+      const report = await reportService.getReportById(reportId);
+      if (!report) {
+        return res.status(404).json({
+          success: false,
+          error: "Laporan tidak ditemukan",
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Ambil komunitas
+      const community = await communityService.getCommunityById(report.community_id);
+      if (!community) {
+        return res.status(404).json({
+          success: false,
+          error: "Komunitas tidak ditemukan",
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Cek role user
+      let userRole = null;
+      if (community.isAdmin(userId)) userRole = "admin";
+      else if (community.isModerator(userId)) userRole = "moderator";
+      else userRole = "member";
+
+      if (userRole !== "admin" && userRole !== "moderator") {
+        return res.status(403).json({
+          success: false,
+          error: "Hanya admin atau moderator yang dapat menghapus laporan",
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      await reportService.deleteReport(reportId, userId, userRole);
+
+      res.json({
+        success: true,
+        message: "Laporan berhasil dihapus (soft delete)",
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error in deleteReport:", error);
+      res.status(500).json({
+        success: false,
+        error: error.message || "Terjadi kesalahan saat menghapus laporan",
+        timestamp: new Date().toISOString(),
+      });
+    }
+  };
   
   // Membuat laporan baru
   createReport = async (req, res) => {

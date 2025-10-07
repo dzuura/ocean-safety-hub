@@ -109,7 +109,7 @@ class ReportService {
     }
   }
 
-  // Menghapus laporan
+  // Menghapus laporan (hard delete)
   async deleteReport(reportId, userId, userRole = "member") {
     try {
       const report = await this.getReportById(reportId);
@@ -122,13 +122,10 @@ class ReportService {
         throw new Error("Unauthorized to delete report");
       }
 
-      // Soft delete
-      await this.collection.doc(reportId).update({
-        status: "deleted",
-        updated_at: new Date().toISOString(),
-      });
+      // Hard delete
+      await this.collection.doc(reportId).delete();
 
-      console.log(`Report deleted: ${reportId}`);
+      console.log(`Report hard deleted: ${reportId}`);
       return true;
     } catch (error) {
       console.error("Error deleting report:", error);

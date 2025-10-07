@@ -428,7 +428,44 @@ Content-Type: application/json
 
 ---
 
-### 7. Tambah Komentar
+### 7. Hapus Laporan (Admin/Moderator)
+
+**`DELETE /api/report/:reportId`**
+
+Menghapus laporan (hanya moderator/admin).
+
+#### Parameter Path
+
+| Parameter    | Tipe   | Wajib | Deskripsi         |
+| ------------ | ------ | ----- | ----------------  |
+| `reportId`   | string | ✅    | ID laporan       |
+
+#### Header
+
+| Header           | Wajib | Deskripsi                |
+| ---------------- | ----- | ------------------------ |
+| Authorization    | ✅    | Bearer token Firebase    |
+
+#### Contoh Request
+
+```bash
+DELETE /api/report/abc123
+Authorization: Bearer <token>
+```
+
+#### Contoh Response
+
+```json
+{
+  "success": true,
+  "message": "Laporan berhasil dihapus",
+  "timestamp": "2025-07-01T12:34:56.789Z"
+}
+```
+
+---
+
+### 8. Tambah Komentar
 
 **`POST /api/report/:reportId/comments`**
 
@@ -474,7 +511,7 @@ Content-Type: application/json
 
 ---
 
-### 8. Statistik Laporan Komunitas
+### 9. Statistik Laporan Komunitas
 
 **`GET /api/report/community/:communityId/stats`**
 

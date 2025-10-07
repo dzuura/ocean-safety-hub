@@ -120,7 +120,7 @@ Memulai session panduan baru dengan informasi perjalanan.
 | `passenger_count`   | integer | ✅    | Jumlah penumpang (1-100)                             |
 | `boat_type`         | string  | ✅    | Jenis: perahu_kecil, kapal_nelayan, kapal_besar      |
 | `weather_condition` | string  | ✅    | Kondisi: calm, moderate, rough                       |
-| `distance_km`       | number  | ✅    | Jarak tempuh dalam kilometer (0.1-1000)              |
+| `distance_km`       | number  | ❌    | Jarak tempuh dalam kilometer (0.1-1000) (opsional)   |
 
 #### Detail Parameter
 
@@ -169,7 +169,7 @@ Kondisi cuaca saat ini atau yang diperkirakan:
 - **`moderate`** - Sedang (gelombang 0.5-1.5m, angin 10-25 km/h)
 - **`rough`** - Buruk (gelombang > 1.5m, angin > 25 km/h)
 
-##### `distance_km` (number, required)
+##### `distance_km` (number, opsional)
 
 Jarak tempuh total perjalanan dalam kilometer:
 

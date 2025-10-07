@@ -609,9 +609,7 @@ const validateTripInfo = (req, res, next) => {
     errors.weather_condition = "Kondisi cuaca tidak valid";
   }
 
-  if (!distance_km) {
-    errors.distance_km = "Jarak tempuh diperlukan";
-  } else {
+  if (distance_km !== undefined) {
     const distance = parseFloat(distance_km);
     if (isNaN(distance) || distance < 0.1) {
       errors.distance_km = "Jarak tempuh minimal 0.1 km";
